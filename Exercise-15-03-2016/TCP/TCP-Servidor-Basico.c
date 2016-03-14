@@ -79,24 +79,27 @@ char **argv;
         perror("Accept()");
         exit(5);
     }
-
-    /* Recebe uma mensagem do cliente através do novo socket conectado */
-    if (recv(ns, recvbuf, sizeof(recvbuf), 0) == -1)
-    {
-        perror("Recv()");
-        exit(6);
-    }
-    printf("Mensagem recebida do cliente: %s\n", recvbuf);
-
-    strcpy(sendbuf, "Resposta");
     
-    /* Envia uma mensagem ao cliente através do socket conectado */
-    if (send(ns, sendbuf, strlen(sendbuf)+1, 0) < 0)
-    {
-        perror("Send()");
-        exit(7);
+    while(strcmp(recvbuf, "4") != 0){
+        
+        /* Recebe uma mensagem do cliente através do novo socket conectado */
+        if (recv(ns, recvbuf, sizeof(recvbuf), 0) == -1)
+        {
+            perror("Recv()");
+            exit(6);
+        }
+        printf("Mensagem recebida do cliente: %s\n", recvbuf);
+        
+        strcpy(sendbuf, recvbuf);
+        
+        /* Envia uma mensagem ao cliente através do socket conectado */
+        if (send(ns, sendbuf, strlen(sendbuf)+1, 0) < 0)
+        {
+            perror("Send()");
+            exit(7);
+        }
+        printf("Mensagem enviada ao cliente: %s\n", sendbuf);
     }
-    printf("Mensagem enviada ao cliente: %s\n", sendbuf);
 
     /* Fecha o socket conectado ao cliente */
     close(ns);

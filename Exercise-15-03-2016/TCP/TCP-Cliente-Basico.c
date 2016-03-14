@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+void printHomeMenu();
+
 /*
  * Cliente TCP
  */
@@ -65,30 +67,43 @@ char **argv;
         exit(4);
     }
     
-    strcpy(sendbuf, "Requisição");
+    strcpy(sendbuf, "0");
     
-    /* Envia a mensagem no buffer de envio para o servidor */
-    if (send(s, sendbuf, strlen(sendbuf)+1, 0) < 0)
-    {
-        perror("Send()");
-        exit(5);
+    while(strcmp(sendbuf, "4") != 0) {
+        
+        printHomeMenu();
+        
+        scanf("%s", &sendbuf);
+        
+        /* Envia a mensagem no buffer de envio para o servidor */
+        if (send(s, sendbuf, strlen(sendbuf)+1, 0) < 0)
+        {
+            perror("Send()");
+            exit(5);
+        }
+        printf("Mensagem enviada ao servidor: %s\n", sendbuf);
+        
+        /* Recebe a mensagem do servidor no buffer de recepção */
+        if (recv(s, recvbuf, sizeof(recvbuf), 0) < 0)
+        {
+            perror("Recv()");
+            exit(6);
+        }
+        printf("Mensagem recebida do servidor: %s\n", recvbuf);
     }
-    printf("Mensagem enviada ao servidor: %s\n", sendbuf);
     
-    /* Recebe a mensagem do servidor no buffer de recepção */
-    if (recv(s, recvbuf, sizeof(recvbuf), 0) < 0)
-    {
-        perror("Recv()");
-        exit(6);
-    }
-    printf("Mensagem recebida do servidor: %s\n", recvbuf);
     
     /* Fecha o socket */
     close(s);
     
     printf("Cliente terminou com sucesso.\n");
     exit(0);
-    
 }
+
+void printHomeMenu(){
+    
+    printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Apagar mensagens\n\n4 - Sair da Aplicacao\n\n");
+}
+
 
 
