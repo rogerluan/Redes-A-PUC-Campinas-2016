@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+void printHomeMenu();
+
 /*
  * Cliente UDP
  */
@@ -15,14 +17,11 @@ main(argc, argv)
 int argc;
 char **argv;
 {
-    
-    
     int s;
     unsigned short port;
     struct sockaddr_in server;
     struct hostent *hostnm;
     char buf[32];
-    
     
     /*
      * O primeiro argumento (argv[1]) é o endereço IP do servidor.
@@ -33,7 +32,6 @@ char **argv;
         printf("Use: %s enderecoIP porta\n",argv[0]);
         exit(1);
     }
-    
     
     /*
      * Obtendo o endereço IP do servidor
@@ -64,17 +62,25 @@ char **argv;
     server.sin_port        = port;               /* Porta do servidor        */
     server.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr); /* Endereço IP do servidor  */
     
-    printf("IP utilizado eh: %s\n", inet_ntoa(server.sin_addr));
-    
-    strcpy(buf, "Hello");
-    
-    /* Envia a mensagem no buffer para o servidor */
-    if (sendto(s, buf, (strlen(buf)+1), 0, (struct sockaddr *)&server, sizeof(server)) < 0)
-    {
-        perror("sendto()");
-        exit(2);
+//    printf("IP utilizado eh: %s\n", inet_ntoa(server.sin_addr));
+
+    printHomeMenu();
+    while(strcmp(buf, "3") != 0) {
+        
+        scanf("%s", &buf);
+        
+        /* Envia a mensagem no buffer para o servidor */
+        if (sendto(s, buf, (strlen(buf)+1), 0, (struct sockaddr *)&server, sizeof(server)) < 0)
+        {
+            perror("sendto()");
+            exit(2);
+        }
     }
-    
     /* Fecha o socket */
     close(s);
+}
+
+void printHomeMenu(){
+    
+    printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Sair da Aplicacao\n\n");
 }

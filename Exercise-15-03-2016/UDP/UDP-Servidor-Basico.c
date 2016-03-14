@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,11 +9,24 @@
 /*
  * Servidor UDP
  */
-main()
+main(argc, argv)
+int argc;
+char **argv;
 {
+    unsigned short port;
     int sockint,s, namelen, client_address_size;
     struct sockaddr_in client, server;
     char buf[32];
+    
+    /*
+     * O primeiro argumento (argv[1]) é o endereço IP do servidor.
+     * O segundo argumento (argv[2]) é a porta do servidor.
+     */
+    if(argc != 2)
+    {
+        printf("Use: %s porta\n", argv[0]);
+        exit(1);
+    }
     
     /*
      * Cria um socket UDP (dgram).
@@ -29,8 +43,10 @@ main()
      * IP = INADDDR_ANY -> faz com que o servidor se ligue em todos
      * os endereços IP
      */
+    port = htons(atoi(argv[1]));
+    
     server.sin_family      = AF_INET;   /* Tipo do endereço             */
-    server.sin_port        = 0;         /* Escolhe uma porta disponível */
+    server.sin_port        = port;   /* Porta escolhida pelo usu‡rio */
     server.sin_addr.s_addr = INADDR_ANY;/* Endereço IP do servidor      */
     
     /*
@@ -58,18 +74,22 @@ main()
      * O endereço do cliente será armazenado em "client".
      */
     client_address_size = sizeof(client);
-    if(recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *) &client,
-                &client_address_size) <0)
-    {
-        perror("recvfrom()");
-        exit(1);
-    }
+    strcpy(buf, "a");
     
-    /*
-     * Imprime a mensagem recebida, o endereço IP do cliente
-     * e a porta do cliente
-     */
-    printf("Recebida a mensagem %s do endereço IP %s da porta %d\n",buf,inet_ntoa(client.sin_addr),ntohs(client.sin_port));
+    while(strcmp(buf, "3") != 0) {
+        if(recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *) &client,
+                    &client_address_size) <0)
+        {
+            perror("recvfrom()");
+            exit(1);
+        }
+        
+        /*
+         * Imprime a mensagem recebida, o endereço IP do cliente
+         * e a porta do cliente
+         */
+        printf("%s\n", buf);
+    }
     
     /*
      * Fecha o socket.
