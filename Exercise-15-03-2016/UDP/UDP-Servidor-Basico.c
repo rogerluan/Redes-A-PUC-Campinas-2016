@@ -60,11 +60,11 @@ void insetMessage(Message message, Message data[], int size) {
     data[0] = message;
 }
 
-Message reiciveMessage(int s, char *buf, struct sockaddr *from, socklen_t *fromlen) {
+Message reiciveMessage(int s, char *buf, int buflen, struct sockaddr *from, socklen_t *fromlen) {
     
     Message newMessage;
     
-    if(recvfrom(s, buf, 31*sizeof(char), 0, from, fromlen) <0)
+    if(recvfrom(s, buf, buflen, 0, from, fromlen) <0)
     {
         perror("recvfrom()");
         exit(1);
@@ -73,7 +73,7 @@ Message reiciveMessage(int s, char *buf, struct sockaddr *from, socklen_t *froml
     strcpy(newMessage.userName, buf);
     fflush(stdout);
     
-    if(recvfrom(s, buf, 31*sizeof(char), 0, from, fromlen) <0)
+    if(recvfrom(s, buf, buflen, 0, from, fromlen) <0)
     {
         perror("recvfrom()");
         exit(1);
@@ -84,7 +84,7 @@ Message reiciveMessage(int s, char *buf, struct sockaddr *from, socklen_t *froml
     return newMessage;
 }
 
-void sendAllMessagens(Message data[], int size, int s, char *buf, struct sockaddr *from, socklen_t fromlen){
+void sendAllMessagens(Message data[], int size, int s, char *buf, int buflen, struct sockaddr *from, socklen_t fromlen){
 
     int i = 0, count = 0;
     
@@ -92,7 +92,7 @@ void sendAllMessagens(Message data[], int size, int s, char *buf, struct sockadd
     
     sprintf(buf, "%d", count);
     
-    if (sendto(s, buf, 31*sizeof(char)+1, 0, from, fromlen) < 0)
+    if (sendto(s, buf, buflen+1, 0, from, fromlen) < 0)
     {
         perror("sendto()");
         exit(2);
@@ -101,14 +101,14 @@ void sendAllMessagens(Message data[], int size, int s, char *buf, struct sockadd
     for (i=0; i<count; i++) {
         
         strcpy(buf, data[i].userName);
-        if (sendto(s, buf, 31*sizeof(char)+1, 0, from, fromlen) < 0)
+        if (sendto(s, buf, buflen+1, 0, from, fromlen) < 0)
         {
             perror("sendto()");
             exit(2);
         }
         
         strcpy(buf, data[i].text);
-        if (sendto(s, buf, 31*sizeof(char)+1, 0, from, fromlen) < 0)
+        if (sendto(s, buf, buflen+1, 0, from, fromlen) < 0)
         {
             perror("sendto()");
             exit(2);
@@ -202,22 +202,18 @@ char **argv;
         
         if(strcmp(buf, "1") == 0) {
             
-            Message m = reiciveMessage(s, buf, (struct sockaddr *) &client,
+            Message m = reiciveMessage(s, buf, sizeof(buf), (struct sockaddr *) &client,
                                        &client_address_size);
             
             insetMessage( m, data, SIZE);
             
         } else if(strcmp(buf, "2") == 0) {
         
-            sendAllMessagens(data, SIZE, s, buf, (struct sockaddr *) &client,
+            sendAllMessagens(data, SIZE, s, buf, sizeof(buf), (struct sockaddr *) &client,
                              client_address_size);
             
         }
-        
-        /*
-         * Imprime a mensagem recebida, o endereço IP do cliente
-         * e a porta do cliente
-         */
+
     }
     
     /*

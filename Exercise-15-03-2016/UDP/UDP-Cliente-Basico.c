@@ -18,35 +18,35 @@ void printHomeMenu(){
     printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Sair da Aplicacao\n\n");
 }
 
-void sendMessage(int s, char* buf, struct sockaddr *from, socklen_t fromlen){
+void sendMessage(int s, char* buf, int buflen, struct sockaddr *from, socklen_t fromlen){
  
     printf("Usuario: ");
-    fgets(buf,31  * sizeof(char),stdin);
+    fgets(buf,buflen,stdin);
     buf[ strlen(buf) - 1 ] = '\0';
     /* Envia a mensagem no buffer para o servidor */
-    if (sendto(s, buf, 31*sizeof(char), 0, from, fromlen) < 0)
+    if (sendto(s, buf, buflen, 0, from, fromlen) < 0)
     {
         perror("sendto()");
         exit(2);
     }
     
     printf("Mensagem: ");
-    fgets(buf,31  * sizeof(char),stdin);
+    fgets(buf,buflen,stdin);
     buf[ strlen(buf) - 1 ] = '\0';
     
     /* Envia a mensagem no buffer para o servidor */
-    if (sendto(s, buf, 31*sizeof(char)+1, 0, from, fromlen) < 0)
+    if (sendto(s, buf, buflen+1, 0, from, fromlen) < 0)
     {
         perror("sendto()");
         exit(2);
     }
 }
 
-void printAllMessagens(int s, void *buf, struct sockaddr *from, socklen_t *fromlen) {
+void printAllMessagens(int s, void *buf, int buflen, struct sockaddr *from, socklen_t *fromlen) {
     
     int i=0, count=0;
     
-    if(recvfrom(s, buf, 31*sizeof(char), 0, from, fromlen) <0)
+    if(recvfrom(s, buf, buflen, 0, from, fromlen) <0)
     {
         perror("recvfrom()");
         exit(1);
@@ -56,7 +56,7 @@ void printAllMessagens(int s, void *buf, struct sockaddr *from, socklen_t *froml
     printf("Mensagens cadastradas: %d\n\n", count);
     
     for (i=0; i<count; i++) {
-        if(recvfrom(s, buf, 31*sizeof(char), 0, from, fromlen) <0)
+        if(recvfrom(s, buf, buflen, 0, from, fromlen) <0)
         {
             perror("recvfrom()");
             exit(1);
@@ -65,7 +65,7 @@ void printAllMessagens(int s, void *buf, struct sockaddr *from, socklen_t *froml
         printf("Usuario: %s\t", buf);
         fflush(stdout);
         
-        if(recvfrom(s, buf, 31*sizeof(char), 0, from, fromlen) <0)
+        if(recvfrom(s, buf, buflen, 0, from, fromlen) <0)
         {
             perror("recvfrom()");
             exit(1);
@@ -144,11 +144,11 @@ char **argv;
         
         if (strcmp(buf, "1") == 0) {
             
-            sendMessage(s, buf, (struct sockaddr *) &server, server_address_size);
+            sendMessage(s, buf, sizeof(buf), (struct sockaddr *) &server, server_address_size);
             
         } else if (strcmp(buf, "2") == 0) {
             
-            printAllMessagens(s, buf, (struct sockaddr *) &server, &server_address_size);
+            printAllMessagens(s, buf, sizeof(buf), (struct sockaddr *) &server, &server_address_size);
         }
     }
     /* Fecha o socket */
