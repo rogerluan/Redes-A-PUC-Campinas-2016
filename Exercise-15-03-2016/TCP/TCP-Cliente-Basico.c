@@ -7,18 +7,84 @@
 #include <stdlib.h>
 #include <string.h>
 
-void printHomeMenu();
+typedef struct {
+    char userName[32];
+    char text[32];
+} Message;
+
+void printHomeMenu(){
+    
+   printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Apagar mensagens\n\n4 - Sair da Aplicacao\n\n");
+}
+
+void sendMessage(int s, char* buf, int buflen){
+    
+    printf("Usuario: ");
+    fgets(buf,buflen,stdin);
+    buf[ strlen(buf) - 1 ] = '\0';
+    /* Envia a mensagem no buffer para o servidor */
+    if (send(s, buf, buflen, 0) < 0)
+    {
+        perror("send()");
+        exit(2);
+    }
+    
+    printf("Mensagem: ");
+    fgets(buf,buflen,stdin);
+    buf[ strlen(buf) - 1 ] = '\0';
+    
+    /* Envia a mensagem no buffer para o servidor */
+    if (send(s, buf, buflen+1, 0) < 0)
+    {
+        perror("send()");
+        exit(2);
+    }
+}
+
+void printAllMessagens(int s, void *buf, int buflen) {
+    
+    int i=0, count=0;
+    
+    if(recv(s, buf, buflen, 0) <0)
+    {
+        perror("recv()");
+        exit(1);
+    }
+    
+    count = atoi(buf);
+    printf("Mensagens cadastradas: %d\n\n", count);
+    
+    for (i=0; i<count; i++) {
+        if(recv(s, buf, buflen, 0) <0)
+        {
+            perror("recv()");
+            exit(1);
+        }
+        
+        printf("Usuario: %s\t", buf);
+        fflush(stdout);
+        
+        if(recv(s, buf, buflen, 0) <0)
+        {
+            perror("recv()");
+            exit(1);
+        }
+        
+        printf("Mensagem: %s\n\n", buf);
+        fflush(stdout);
+    }
+}
 
 /*
  * Cliente TCP
  */
-main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {
     unsigned short port;
-    char sendbuf[12];
-    char recvbuf[12];
+    char sendbuf[32];
+    char recvbuf[32];
     struct hostent *hostnm;
     struct sockaddr_in server;
     int s;
@@ -67,31 +133,29 @@ char **argv;
         exit(4);
     }
     
-    strcpy(sendbuf, "0");
-    
+    strcpy(sendbuf, "a");
     while(strcmp(sendbuf, "4") != 0) {
         
         printHomeMenu();
+        fgets(sendbuf,sizeof(sendbuf) - 1, stdin);
+        sendbuf[ strlen(sendbuf) - 1 ] = '\0';
         
-        scanf("%s", &sendbuf);
-        
-        /* Envia a mensagem no buffer de envio para o servidor */
-        if (send(s, sendbuf, strlen(sendbuf)+1, 0) < 0)
+        /* Envia a mensagem no buffer para o servidor */
+        if (send(s, sendbuf, sizeof(sendbuf), 0) < 0)
         {
-            perror("Send()");
-            exit(5);
+            perror("send()");
+            exit(2);
         }
-        printf("Mensagem enviada ao servidor: %s\n", sendbuf);
         
-        /* Recebe a mensagem do servidor no buffer de recepção */
-        if (recv(s, recvbuf, sizeof(recvbuf), 0) < 0)
-        {
-            perror("Recv()");
-            exit(6);
+        if (strcmp(sendbuf, "1") == 0) {
+            
+            sendMessage(s, sendbuf, sizeof(sendbuf));
+            
+        } else if (strcmp(sendbuf, "2") == 0) {
+            
+            printAllMessagens(s, sendbuf, sizeof(sendbuf));
         }
-        printf("Mensagem recebida do servidor: %s\n", recvbuf);
     }
-    
     
     /* Fecha o socket */
     close(s);
@@ -99,11 +163,5 @@ char **argv;
     printf("Cliente terminou com sucesso.\n");
     exit(0);
 }
-
-void printHomeMenu(){
-    
-    printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Apagar mensagens\n\n4 - Sair da Aplicacao\n\n");
-}
-
 
 
