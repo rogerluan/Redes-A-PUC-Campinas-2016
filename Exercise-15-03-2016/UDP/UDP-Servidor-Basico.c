@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h> // to get rid of close() warning
 
 #define SIZE 5
 
@@ -60,7 +61,7 @@ void insetMessage(Message message, Message data[], int size) {
     data[0] = message;
 }
 
-Message reiciveMessage(int s, char *buf, int buflen, struct sockaddr *from, socklen_t *fromlen) {
+Message receiveMessage(int s, char *buf, int buflen, struct sockaddr *from, socklen_t *fromlen) {
     
     Message newMessage;
     
@@ -84,7 +85,7 @@ Message reiciveMessage(int s, char *buf, int buflen, struct sockaddr *from, sock
     return newMessage;
 }
 
-void sendAllMessagens(Message data[], int size, int s, char *buf, int buflen, struct sockaddr *from, socklen_t fromlen){
+void sendAllMessages(Message data[], int size, int s, char *buf, int buflen, struct sockaddr *from, socklen_t fromlen){
 
     int i = 0, count = 0;
     
@@ -202,14 +203,14 @@ char **argv;
         
         if(strcmp(buf, "1") == 0) {
             
-            Message m = reiciveMessage(s, buf, sizeof(buf), (struct sockaddr *) &client,
+            Message m = receiveMessage(s, buf, sizeof(buf), (struct sockaddr *) &client,
                                        &client_address_size);
             
             insetMessage( m, data, SIZE);
             
         } else if(strcmp(buf, "2") == 0) {
         
-            sendAllMessagens(data, SIZE, s, buf, sizeof(buf), (struct sockaddr *) &client,
+            sendAllMessages(data, SIZE, s, buf, sizeof(buf), (struct sockaddr *) &client,
                              client_address_size);
             
         }

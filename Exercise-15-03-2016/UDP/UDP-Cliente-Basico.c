@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h> // to get rid of close() warning
 
 #include <arpa/inet.h>
 #include <netdb.h>
