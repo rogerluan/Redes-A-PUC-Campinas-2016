@@ -6,13 +6,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> // to get rid of close() warning
+
+typedef struct {
+    char userName[10];
+    char text[50];
+} Message;
 
 void printHomeMenu();
 
 /*
  * Cliente TCP
  */
-main(argc, argv)
+int main(argc, argv)
 int argc;
 char **argv;
 {
@@ -24,28 +30,26 @@ char **argv;
     int s;
     
     /*
-     * O primeiro argumento (argv[1]) È o hostname do servidor.
-     * O segundo argumento (argv[2]) È a porta do servidor.
+     * O primeiro argumento (argv[1]) é o hostname do servidor.
+     * O segundo argumento (argv[2]) é a porta do servidor.
      */
-    if (argc != 3)
-    {
+    if (argc != 3) {
         fprintf(stderr, "Use: %s hostname porta\n", argv[0]);
         exit(1);
     }
     
     /*
-     * Obtendo o endereÁo IP do servidor
+     * Obtendo o endereço IP do servidor
      */
     hostnm = gethostbyname(argv[1]);
-    if (hostnm == (struct hostent *) 0)
-    {
+    if (hostnm == (struct hostent *) 0) {
         fprintf(stderr, "Gethostbyname failed\n");
         exit(2);
     }
     port = (unsigned short) atoi(argv[2]);
     
     /*
-     * Define o endereÁo IP e a porta do servidor
+     * Define o endereço IP e a porta do servidor
      */
     server.sin_family      = AF_INET;
     server.sin_port        = htons(port);
@@ -54,15 +58,13 @@ char **argv;
     /*
      * Cria um socket TCP (stream)
      */
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-    {
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Socket()");
         exit(3);
     }
     
     /* Estabelece conex„o com o servidor */
-    if (connect(s, (struct sockaddr *)&server, sizeof(server)) < 0)
-    {
+    if (connect(s, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("Connect()");
         exit(4);
     }
@@ -76,16 +78,14 @@ char **argv;
         scanf("%s", &sendbuf);
         
         /* Envia a mensagem no buffer de envio para o servidor */
-        if (send(s, sendbuf, strlen(sendbuf)+1, 0) < 0)
-        {
+        if (send(s, sendbuf, strlen(sendbuf)+1, 0) < 0) {
             perror("Send()");
             exit(5);
         }
         printf("Mensagem enviada ao servidor: %s\n", sendbuf);
         
-        /* Recebe a mensagem do servidor no buffer de recepÁ„o */
-        if (recv(s, recvbuf, sizeof(recvbuf), 0) < 0)
-        {
+        /* Recebe a mensagem do servidor no buffer de recepção */
+        if (recv(s, recvbuf, sizeof(recvbuf), 0) < 0) {
             perror("Recv()");
             exit(6);
         }
@@ -101,7 +101,6 @@ char **argv;
 }
 
 void printHomeMenu(){
-    
     printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Apagar mensagens\n\n4 - Sair da Aplicacao\n\n");
 }
 
