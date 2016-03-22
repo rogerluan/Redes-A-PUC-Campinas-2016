@@ -131,7 +131,6 @@ char **argv;
     char buf[32];
     
     Message data[SIZE];
-    
     cleanArrayData(data, SIZE);
     
     /*

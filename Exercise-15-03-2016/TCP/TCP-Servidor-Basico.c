@@ -6,10 +6,131 @@
 #include <string.h>
 #include <unistd.h> // to get rid of close() warning
 
+#define SIZE 5
+
 typedef struct {
-    char userName[10];
-    char text[50];
+    char userName[32];
+    char text[32];
 } Message;
+
+int countData(Message data[], int size){
+    int i = 0;
+    for (i=0; i<size; i++) {
+        if (strcmp(data[i].userName, "") == 0) {
+            return i;
+        }
+    }
+    return size;
+}
+
+void cleanArrayData(Message data[], int size){
+    
+    int i=0;
+    
+    for(i=0; i<size; i++) {
+        strcpy(data[i].userName,"");
+        strcpy(data[i].text,"");
+    }
+}
+
+void deleteWithName(char* name, Message data[], int size) {
+    
+    int i=0, index=0;
+    
+    for(i=0; i<size; i++) {
+        if (strcmp(data[i].userName, name) == 0) {
+            index = i;
+            break;
+        }
+    }
+    
+    for (i = index; i<size -1; i++) {
+        data[i] = data[i+1];
+    }
+}
+
+void insetMessage(Message message, Message data[], int size) {
+    
+    int i = size - 1;
+    
+    for (i = size - 1; i>0; i--) {
+        data[i] = data[i-1];
+    }
+    
+    data[0] = message;
+}
+
+Message reiciveMessage(int s, char *buf, int buflen) {
+    
+    Message newMessage;
+    
+    int msgSize = recv(s, buf, buflen, 0);
+    if(msgSize <0)
+    {
+        perror("recv()");
+        exit(1);
+    }
+    printf("reiciveMessage 1 %s %d\n", buf, msgSize);
+    fflush(stdout);
+    
+    strcpy(newMessage.userName, buf);
+    fflush(stdout);
+    
+    if(recv(s, buf, buflen, 0) <0)
+    {
+        perror("recv()");
+        exit(1);
+    }
+    
+    printf("reiciveMessage 2 %s\n", buf);
+    fflush(stdout);
+
+    strcpy(newMessage.text, buf);
+    fflush(stdout);
+    return newMessage;
+}
+
+void sendAllMessagens(Message data[], int size, int s, char *buf, int buflen){
+    
+    int i = 0, count = 0;
+    
+    count = countData(data, size);
+    
+    sprintf(buf, "%d", count);
+    
+    if (send(s, buf, buflen+1, 0) < 0)
+    {
+        perror("send()");
+        exit(2);
+    }
+    
+    printf("%s\n", buf);
+    fflush(stdout);
+    
+    for (i=0; i<count; i++) {
+        
+        strcpy(buf, data[i].userName);
+        if (send(s, buf, buflen+1, 0) < 0)
+        {
+            perror("sendto()");
+            exit(2);
+        }
+        
+        printf("%s\n", buf);
+        fflush(stdout);
+        
+        strcpy(buf, data[i].text);
+        if (send(s, buf, buflen+1, 0) < 0)
+        {
+            perror("send()");
+            exit(2);
+        }
+        
+        printf("%s\n", buf);
+        fflush(stdout);
+
+    }
+}
 
 /*
  * Servidor TCP
@@ -18,15 +139,18 @@ int main(argc, argv)
 int argc;
 char **argv;
 {
-    unsigned short port;
-    char sendbuf[12];
-    char recvbuf[12];
-    struct sockaddr_in client;
-    struct sockaddr_in server;
+    unsigned short port;       
+    char sendbuf[32];
+    char recvbuf[32];
+    struct sockaddr_in client; 
+    struct sockaddr_in server; 
     int s;                     /* Socket para aceitar conexões       */
     int ns;                    /* Socket conectado ao cliente        */
-    unsigned int namelen;
+    socklen_t namelen;
     
+    Message data[SIZE];
+    cleanArrayData(data, SIZE);
+
     /*
      * O primeiro argumento (argv[1]) é a porta
      * onde o servidor aguardará por conexões
@@ -82,23 +206,29 @@ char **argv;
         exit(5);
     }
     
-    while(strcmp(recvbuf, "4") != 0){
-        
-        /* Recebe uma mensagem do cliente através do novo socket conectado */
-        if (recv(ns, recvbuf, sizeof(recvbuf), 0) == -1) {
-            perror("Recv()");
-            exit(6);
+    
+    strcpy(recvbuf, "a");
+    
+    while(strcmp(recvbuf, "4") != 0) {
+        if (recv(ns, recvbuf, sizeof(recvbuf), 0) == -1)
+        {
+            perror("recvfrom()");
+            exit(1);
         }
-        printf("Mensagem recebida do cliente: %s\n", recvbuf);
         
-        strcpy(sendbuf, recvbuf);
+        printf("recv Main    %s\n", recvbuf);
+        fflush(stdout);
         
-        /* Envia uma mensagem ao cliente através do socket conectado */
-        if (send(ns, sendbuf, strlen(sendbuf)+1, 0) < 0) {
-            perror("Send()");
-            exit(7);
+        if(strcmp(recvbuf, "1") == 0) {
+            
+            Message m = reiciveMessage(ns, recvbuf, sizeof(recvbuf));
+            
+            insetMessage( m, data, SIZE);
+            
+        } else if(strcmp(recvbuf, "2") == 0) {
+            
+            sendAllMessagens(data, SIZE, ns, recvbuf, sizeof(recvbuf));
         }
-        printf("Mensagem enviada ao cliente: %s\n", sendbuf);
     }
     
     /* Fecha o socket conectado ao cliente */
