@@ -15,10 +15,28 @@
 #include <string.h>
 #include <unistd.h>
 
+#define SIZE 5
+
 typedef struct {
+    
     char userName[32];
     char text[32];
 } Message;
+
+typedef struct {
+    
+    char *messageError;
+    int error;
+    int sizeData;
+    Message data[SIZE];
+} Response;
+
+typedef struct {
+    
+    int cod;
+    int sizeData;
+    Message dataParam[SIZE];
+} SendMessage;
 
 void printMessage(Message message);
 
@@ -26,58 +44,34 @@ void printHomeMenu() {
     printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Apagar mensagens\n\n4 - Sair da Aplicacao\n\n");
 }
 
-void sendMessage(int socket, char* str, int buflen) {
+Message createMessage() {
 
     Message newMessage;
     
     printf("Usuario: ");
-    fgets(str,buflen,stdin);
-    str[ strlen(str) - 1 ] = '\0';
+
+    fgets(newMessage.userName, 32, stdin);
+    newMessage.userName[ strlen(newMessage.userName) - 1 ] = '\0';
     
-    strcpy(newMessage.userName, str);
+    printf("\nMensagem: ");
+    fgets(newMessage.userName, 32, stdin);
+    newMessage.userName[ strlen(newMessage.userName) - 1 ] = '\0';
     
-    printf("Mensagem: ");
-    fgets(str,buflen,stdin);
-    str[ strlen(str) - 1 ] = '\0';
-    
-    strcpy(newMessage.text, str);
-    
-    /* Envia a mensagem no buffer para o servidor */
-    if (send(socket, &newMessage, sizeof(newMessage), 0) < 0) {
-        perror("send()");
-        exit(2);
-    }
+    return newMessage;
 }
 
-void receiveMessages(int socket) {
+void receiveMessages(Message data[], int size) {
     
-    Message newMessage;
-    Message array[5];
-    int msgCount = 0;
+    printf("Mensagens cadastradas: %d\n\n", size);
     
-    long msgSize = recv(socket, array, sizeof(array), 0);
-    if (msgSize < 0) {
-        perror("recv()");
-        exit(1);
-    }
-    
-    for (int i = 0; i < 5; i++) {
-        if (strcmp(array[i].userName,"\0") == 0) {
-            break;
-        }
-        msgCount++;
-    }
-    
-    printf("Mensagens cadastradas: %d\n\n",msgCount);
-    
-    for (int i = 0; i < msgCount; i++) {
-        newMessage = array[i];
-        printMessage(newMessage);
+    for (int i = 0; i < size; i++) {
+        
+        printMessage(data[i]);
     }
 }
 
 void printMessage(Message message) {
-    printf("Usuario: %s\nMessage: %s\n\n",message.userName,message.text);
+    printf("Usuario: %s\nMessage: %s\n\n", message.userName, message.text);
 }
 
 /*
@@ -85,7 +79,6 @@ void printMessage(Message message) {
  */
 int main(int argc, const char * argv[]) {
     unsigned short port;
-    char sendbuf[32];
     struct hostent *hostnm;
     struct sockaddr_in server;
     int sock;
@@ -130,25 +123,85 @@ int main(int argc, const char * argv[]) {
         exit(4);
     }
     
-    strcpy(sendbuf, "a");
-    while(strcmp(sendbuf, "4") != 0) {
+    SendMessage sendMessage;
+    sendMessage.cod = -1;
+    
+    while(sendMessage.cod != 0) {
         
         printHomeMenu();
-        fgets(sendbuf,sizeof(sendbuf) - 1, stdin);
-        sendbuf[ strlen(sendbuf) - 1 ] = '\0';
         
-        /* Envia a mensagem no buffer para o servidor */
-        if (send(sock, sendbuf, sizeof(sendbuf), 0) < 0) {
-            perror("send()");
-            exit(2);
+        char option[32];
+        fgets(option, 32, stdin);
+        sendMessage.cod = (int)option[0]-48;
+        
+        if (sendMessage.cod == 1) {
+            
+            sendMessage.dataParam[0] = createMessage();
+            
+            /* Envia a mensagem no buffer para o servidor */
+            if (send(sock, &sendMessage, sizeof(sendMessage), 0) < 0) {
+                perror("send()");
+                exit(2);
+            }
+            
+            Response responseMessage;
+            if(recv(sock, &responseMessage, sizeof(responseMessage), 0) < 0) {
+                perror("recv()");
+                exit(2);
+            } else {
+                
+                if (responseMessage.error == 0) {
+                    printf("Mesagem Cadastrada com sucesso.\n");
+                } else {
+                    printf("Erro %d - %s\n", responseMessage.error, responseMessage.messageError);
+                }
+            }
+        } else if (sendMessage.cod == 2) {
+            
+            /* Envia a mensagem no buffer para o servidor */
+            if (send(sock, &sendMessage, sizeof(sendMessage), 0) < 0) {
+                perror("send()");
+                exit(2);
+            }
+            
+            Response responseMessage;
+            if(recv(sock, &responseMessage, sizeof(responseMessage), 0) < 0) {
+                perror("recv()");
+                exit(2);
+            }
+            
+            receiveMessages(responseMessage.data, responseMessage.sizeData);
+        } else if (sendMessage.cod == 3) {
+            
+            
+            char *user;
+            printf("Usuario: ");
+            fgets(user, 32, stdin);
+            user[ strlen(user) - 1 ] = '\0';
+            
+            strcpy(sendMessage.dataParam[0].userName, user);
+            
+            /* Envia a mensagem no buffer para o servidor */
+            if (send(sock, &sendMessage, sizeof(sendMessage), 0) < 0) {
+                perror("send()");
+                exit(2);
+            }
+            
+            Response responseMessage;
+            if(recv(sock, &responseMessage, sizeof(responseMessage), 0) < 0) {
+                perror("recv()");
+                exit(2);
+            } else {
+                
+                if (responseMessage.error == 0) {
+                    printf("Mesagem excluida com sucesso.\n");
+                    printMessage(responseMessage.data[0]);
+                } else {
+                    printf("Erro %d - %s\n", responseMessage.error, responseMessage.messageError);
+                }
+            }
         }
-        if (strcmp(sendbuf, "1") == 0) {
-            sendMessage(sock, sendbuf, sizeof(sendbuf));
-        } else if (strcmp(sendbuf, "2") == 0) {
-            receiveMessages(sock);
-        } else if (strcmp(sendbuf, "3") == 0) {
-            /* implement message deletion function */
-        }
+        
     }
     
     /* Fecha o socket */

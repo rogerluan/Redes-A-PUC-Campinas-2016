@@ -17,9 +17,25 @@
 #define SIZE 5
 
 typedef struct {
+    
     char userName[32];
     char text[32];
 } Message;
+
+typedef struct {
+    
+    char *messageError;
+    int error;
+    int sizeData;
+    Message data[SIZE];
+} Response;
+
+typedef struct {
+    
+    int cod;
+    int sizeData;
+    Message dataParam[SIZE];
+} ReceiveMessage;
 
 int countData(Message data[], int size){
     int i = 0;
@@ -55,10 +71,6 @@ void deleteWithName(char* name, Message data[], int size) {
 }
 
 void insertMessage(Message data[], Message message) {
-    
-    //    if (!strcmp(data[size],NULL)) {
-    //        //check if we have already stored 5 message.
-    //    }
     
     for (int i = 0; i < SIZE; i++) {
         if (strcmp(data[i].userName, "\0") == 0) {
@@ -233,53 +245,71 @@ int main(int argc, const char * argv[]) {
              * >>>> Perguntar ao Edmar como passar o array como parâmetro
              * para ser usado posteriormente nas chamadas send() <<<<<<
              */
-            char recvbuf[32];
+//            char recvbuf[32];
+            ReceiveMessage receive;
+            receive.cod = -1;
             
-            while(strcmp(recvbuf, "4") != 0) {
-                long recvReturn = recv(newSocket, recvbuf, sizeof(recvbuf), 0);
+            while(receive.cod != 0) {
+                
+                long recvReturn = recv(newSocket, &receive, sizeof(receive), 0);
                 if (recvReturn == -1 || recvReturn == 0) {
                     break;
                 }
                 
-                printf("[RunProgram] Received Action: %s\n", recvbuf);
+                printf("[RunProgram] Received Action: %d\n", receive.cod);
                 fflush(stdout);
                 
-                if (strcmp(recvbuf, "1") == 0) {
+                if (receive.cod == 1) {
                     
-                    Message messageReceived = receiveMessage(newSocket);
-//                    insertMessage(data, messageReceived);
+                    insertMessage(data, receive.dataParam[0]);
                     
-                    for (int i = 0; i < SIZE; i++) {
+                    Response responseMessage;
+                    responseMessage.error = 0;
+                    
+                    if (send(newSocket, &responseMessage, sizeof(responseMessage), 0) < 0) {
+                        perror("send()");
+                        exit(2);
+                    }
+                    
+                } else if(receive.cod == 2) {
+                    
+                    Response responseMessage;
+                    responseMessage.error = 0;
+                    
+                    int i = 0;
+                    
+                    for(i = 0; i < SIZE; i++){
+                        
                         if (strcmp(data[i].userName, "\0") == 0) {
-                            data[i] = messageReceived;
                             break;
+                        } else {
+                            
+                            responseMessage.data[i] = data[i];
                         }
                     }
                     
-                } else if(strcmp(recvbuf, "2") == 0) {
-                    //            sendAllMessages(newSocket,data);
+                    responseMessage.sizeData = i;
                     
-                    for (int i = 0 ; i < SIZE; i++) {
-                        printf("Sending username: %s\n", data[i].userName);
-                        printf("Sending message: %s\n\n", data[i].text);
-                        fflush(stdout);
-                    }
-                    
-                    
-                    /* Envia a mensagem para o cliente */
-                    if (send(newSocket, data, sizeof(data), 0) < 0) {
+                    if (send(newSocket, &responseMessage, sizeof(responseMessage), 0) < 0) {
                         perror("send()");
                         exit(2);
-                    } else {
-                        printf("Successfully sent all messages.\n\n");
-                        fflush(stdout);
                     }
-                    fflush(stdout);
                     
-                } else if(strcmp(recvbuf, "3") == 0) {
+                } else if(receive.cod == 3) {
                     /**
                      * implement message deleting
                      */
+                    
+                    deleteWithName(receive.dataParam[0].userName, data, SIZE);
+                    
+                    Response responseMessage;
+                    responseMessage.error = 0;
+                    
+                    if (send(newSocket, &responseMessage, sizeof(responseMessage), 0) < 0) {
+                        perror("send()");
+                        exit(2);
+                    }
+                    
                 } else {
                     /**
                      * implementar envio de mensagem de erro caso a entrada seja
