@@ -12,7 +12,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
-#include <unistd.h> // to get rid of close() warning
+#include <unistd.h>
 
 #define SIZE 5
 
@@ -32,12 +32,9 @@ int countData(Message data[], int size){
 }
 
 void cleanArrayData(Message data[], int size){
-    
-    int i=0;
-    
-    for(i=0; i<size; i++) {
-        strcpy(data[i].userName,"");
-        strcpy(data[i].text,"");
+    for (int i = 0; i < size; i++) {
+        strcpy(data[i].userName,"\0");
+        strcpy(data[i].text,"\0");
     }
 }
 
@@ -144,10 +141,6 @@ void runProgram(int newSocket, Message data[], int size) {
 /*
  * Servidor TCP
  */
-//int main(argc, argv)
-//int argc;
-//char **argv;
-//{
 int main(int argc, const char * argv[]) {
     unsigned short port;
     Message data[SIZE];
@@ -155,17 +148,11 @@ int main(int argc, const char * argv[]) {
     struct sockaddr_in client;
     struct sockaddr_in server;
     int sock;                     /* Socket para aceitar conexões       */
-    int newSocket;                    /* Socket conectado ao cliente        */
+    int newSocket;                /* Socket conectado ao cliente        */
     socklen_t namelen;
     pid_t pid;
     
-    //    cleanArrayData(data, SIZE);
-    
-    
-    for (int i = 0; i < SIZE; i++) {
-        strcpy(data[i].userName,"\0");
-        strcpy(data[i].text,"\0");
-    }
+    cleanArrayData(data, SIZE);
     
     /*
      * O primeiro argumento (argv[1]) È a porta
@@ -238,9 +225,11 @@ int main(int argc, const char * argv[]) {
              * Processo filho
              */
             
+            
             /* Roda a logica do programa */
 //            runProgram(newSocket,data,SIZE);
             
+            /* O código abaixo é equivalente ao método runProgram */
             char recvbuf[32];
             
             while(strcmp(recvbuf, "4") != 0) {

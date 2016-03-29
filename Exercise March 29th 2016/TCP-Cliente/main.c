@@ -11,21 +11,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h> // to get rid of close() warning
+#include <unistd.h>
 
 typedef struct {
     char userName[32];
     char text[32];
 } Message;
 
-//typedef struct {
-//    Message messages[5];
-//} MessageList;
-
-void printMessages(Message message);
+void printMessage(Message message);
 
 void printHomeMenu() {
     printf("Opcoes:\n\n1 - Cadastrar mensagem\n\n2 - Ler mensagens\n\n3 - Apagar mensagens\n\n4 - Sair da Aplicacao\n\n");
@@ -77,56 +72,20 @@ void receiveMessages(int socket) {
     
     for (int i = 0; i < msgCount; i++) {
         newMessage = array[i];
-        printMessages(newMessage);
+        printMessage(newMessage);
     }
 }
 
-void printMessages(Message message) {
-    
+void printMessage(Message message) {
     printf("Usuario: %s\nMessage: %s\n\n",message.userName,message.text);
-//    
-//    int i=0, count=0;
-//    
-//    if (recv(s, buf, buflen, 0) <0) {
-//        perror("recv()");
-//        exit(1);
-//    }
-//    
-//    count = atoi(buf);
-//    printf("Mensagens cadastradas: %d\n\n", count);
-//    
-//    for (i=0; i<count; i++) {
-//        if(recv(s, buf, buflen, 0) <0)
-//        {
-//            perror("recv()");
-//            exit(1);
-//        }
-//        
-//        printf("Usuario: %s\t", buf);
-//        fflush(stdout);
-//        
-//        if(recv(s, buf, buflen, 0) <0)
-//        {
-//            perror("recv()");
-//            exit(1);
-//        }
-//        
-//        printf("Mensagem: %s\n\n", buf);
-//        fflush(stdout);
-//    }
 }
 
 /*
  * Cliente TCP
  */
-//int main(argc, argv)
-//int argc;
-//char **argv;
-//{
 int main(int argc, const char * argv[]) {
     unsigned short port;
     char sendbuf[32];
-//    char recvbuf[32];
     struct hostent *hostnm;
     struct sockaddr_in server;
     int sock;
@@ -165,7 +124,7 @@ int main(int argc, const char * argv[]) {
         exit(3);
     }
     
-    /* Estabelece conex„o com o servidor */
+    /* Estabelece conexão com o servidor */
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("Connect()");
         exit(4);
@@ -187,7 +146,6 @@ int main(int argc, const char * argv[]) {
             sendMessage(sock, sendbuf, sizeof(sendbuf));
         } else if (strcmp(sendbuf, "2") == 0) {
             receiveMessages(sock);
-//            printAllMessagens(s, sendbuf, sizeof(sendbuf));
         } else if (strcmp(sendbuf, "3") == 0) {
             /* implement message deletion function */
         }
