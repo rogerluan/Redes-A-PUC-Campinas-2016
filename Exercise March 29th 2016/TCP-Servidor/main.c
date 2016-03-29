@@ -229,7 +229,10 @@ int main(int argc, const char * argv[]) {
             /* Roda a logica do programa */
 //            runProgram(newSocket,data,SIZE);
             
-            /* O código abaixo é equivalente ao método runProgram */
+            /* O código abaixo é equivalente ao método runProgram
+             * >>>> Perguntar ao Edmar como passar o array como parâmetro
+             * para ser usado posteriormente nas chamadas send() <<<<<<
+             */
             char recvbuf[32];
             
             while(strcmp(recvbuf, "4") != 0) {
