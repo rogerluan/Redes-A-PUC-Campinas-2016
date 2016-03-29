@@ -1,0 +1,211 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- saved from url=(0128)https://ead.puc-campinas.edu.br/access/meleteDocs/content/private/meleteDocs/21804006010166389201212/uploads/RC1-Atividades.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    
+    <title>Redes de Computadores I - Atividades</title>
+  <script type="text/javascript" src="chrome-extension://bfbmjmiodbnnpllbbbfblcplfjjepjdn/js/injected.js"></script></head>
+  <body style="background-color: rgb(255, 255, 239);">
+    <div align="center"> &nbsp;
+      <font face="Arial,Helvetica,sans-serif" size="2">
+        <h2>REDES DE COMPUTADORES I<br>
+        </h2>
+        <h2>&nbsp; Atividade 1 - 2º Semestre 2012</h2>
+      </font></div>
+    <p> &nbsp; </p>
+    <font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+        <h2> <font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+              <h2> <b>Desenvolvimento da Atividade<br>
+                </b></h2>
+            </font></font>
+        </h2>
+      </font>
+    <p><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2"> A atividade
+          deverá
+          ser desenvolvida em <span style="font-weight: bold;">grupos
+            de no
+            máximo 2 integrantes</span>.<br>
+          Em todos os
+          laboratórios o Sistema Operacional Linux encontra-se
+          instalado.
+          Faça uso de
+          qualquer um dos laboratórios para a
+          realização dos
+          projetos.</font></font></p>
+    <font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+        <h2><b>Normas de conduta<br>
+          </b></h2>
+      </font></font>
+    <p><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2"> A
+          interação
+          entre os grupos é estimulada, no entanto qualquer
+          tentativa de
+          plágio de trabalhos será punida com a <span style="font-weight: bold;">nota -Nmax nos trabalhos para
+            todos os
+            envolvidos</span>.</font></font></p>
+    <font face="Verdana,Arial,Helvetica,sans-serif" size="2">
+      <h2> </h2>
+    </font><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+        <h2><b>Descrição da Atividade<br>
+          </b></h2>
+      </font></font>
+    <p><font face="Arial,Helvetica,sans-serif" size="2"> <font face="Arial,Helvetica,sans-serif" size="2"><span style="font-weight: bold;"> Objetivo:</span> Obter
+          conhecimentos
+          básicos para o desenvolvimento de software cliente e
+          servidor em
+          ambientes TCP/IP<br>
+        </font></font></p>
+    <p><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">Leia atentamente as
+          informações a seguir e realize as atividades
+          solicitadas:
+        </font></font></p>
+    <font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+        <li>Estude os textos <a href="https://ead.puc-campinas.edu.br/access/meleteDocs/content/private/meleteDocs/21804006010166389201212/uploads/RC1-ProjetoClientes.pdf">Projeto
+            de Software de Clientes</a> e <a href="https://ead.puc-campinas.edu.br/access/meleteDocs/content/private/meleteDocs/21804006010166389201212/uploads/RC1-ProjetoServidores.pdf">Projeto e
+            Implementação de Servidores </a><br>
+        </li>
+        <li>Estude, compile e teste os exemplos de programas <a href="https://ead.puc-campinas.edu.br/access/meleteDocs/content/private/meleteDocs/21804006010166389201212/uploads/UDP-Cliente-Basico.c">cliente UDP</a> e <a href="https://ead.puc-campinas.edu.br/access/meleteDocs/content/private/meleteDocs/21804006010166389201212/uploads/UDP-Servidor-Basico.c">servidor UDP</a> <br>
+        </li>
+        <li>Implemente uma aplicação para compartilhamento
+          de mensagens como descrito a
+          seguir</li>
+        <li>Elabore um relatório detalhado mostrando todo o
+          trabalho
+          realizado como descrito a seguir&nbsp; <br>
+        </li>
+      </font><br>
+      A atividade </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">consiste no
+      desenvolvimento de uma aplicação </font><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">para compartilhamento
+        de mensagens</font></font><font face="Verdana,Arial,Helvetica,sans-serif" size="2"> utilizando
+      sockets UDP.<br>
+      Para tal, será necessário implementar
+      um
+      programa cliente UDP e um programa servidor UDP.<br>
+    </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2"><br>
+      Ao executar o programa servidor&nbsp;o usuário deve
+      informar&nbsp;o número da
+      porta na qual o programa servidor aguardará por
+      requisições, como no exemplo a seguir:<br>
+    </font>
+    <pre style="font-weight: bold;">	# ./servidor 5000</pre>
+    <span style="font-weight: bold;">
+    </span><font face="Verdana,Arial,Helvetica,sans-serif" size="2">O
+      servidor
+      deve aguardar por requisições enviadas pelos
+      clientes e realizar as
+      operações solicitadas, exibindo na tela mensagens de
+      log contendo informações resumidas das
+      operações solicitadas.<br>
+      As mensagens de log devem exibir informações como o
+      endereço IP e a porta do cliente que solicitou a
+      operação, além da operação
+      solicitada e o resultado retornado pelo servidor informando
+      sucesso ou falha na realização da
+      operação.<br>
+      <br>
+    </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">Ao
+      executar o programa&nbsp;cliente o usuário deve
+      informar&nbsp;o endereço IP e a
+      porta onde se encontra o programa servidor, como no exemplo a
+      seguir:</font><br>
+    <pre style="font-weight: bold;">	# ./cliente 192.168.1.2 5000<br></pre>
+    <font face="Verdana,Arial,Helvetica,sans-serif" size="2">Em seguida,
+      o
+      programa cliente deve exibir um menu com as seguintes
+      opções:<br style="font-weight: bold;">
+      <span style="font-weight: bold;">
+      </span></font>
+    <pre style="font-weight: bold;">	Opções:  <br>	1 - Cadastrar mensagem<br>	2 - Ler mensagens<br>	3 - Sair da Aplicação</pre>
+    <font face="Verdana,Arial,Helvetica,sans-serif" size="2">O programa
+      cliente só deve ser
+      encerrado, </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">caso o
+      usuário selecione a opção 3.</font><br>
+    <font face="Verdana,Arial,Helvetica,sans-serif" size="2"><br>
+      Caso o
+      usuário selecione a opção 1, o programa
+      cliente deve solicitar o nome do usuário e a mensagem que
+      será cadastrada, como no exemplo a seguir:<br>
+    </font>
+    <pre>	<span style="font-weight: bold;">Usuário:</span> fulano<br>	<span style="font-weight: bold;">Mensagem:</span> Testando o cadastramento de mensagens.</pre>
+    <font face="Verdana,Arial,Helvetica,sans-serif" size="2">O <span style="text-decoration: underline;">nome do usuário</span>
+      deve conter no <span style="text-decoration: underline;">máximo
+        10 caracteres</span>.<br>
+      A <span style="text-decoration: underline;">mensagem</span>
+      digitada deve conter no <span style="text-decoration: underline;">máximo
+        50 caracteres</span>.<br>
+    </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">Após
+      a leitura do nome do usuário e da mensagem, o programa
+      cliente deve enviar uma requisição ao servidor
+      solicitando o cadastramento de tais informações.<br>
+      O servidor deve então realizar a operação
+      solicitada, retornando ao cliente uma resposta informando se a
+      solicitação foi atendida corretamente ou não,
+      especificando o motivo da falha caso a requisição
+      não possa ser atendida por algum motivo.<br>
+      O servidor deve permitir o cadastramento de <span style="text-decoration: underline;">no máximo 5 mensagens</span>
+      no total.<br>
+      <br>
+    </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">Caso
+      o
+      usuário selecione a opção 2, o programa
+      cliente deve </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">enviar uma
+      requisição ao servidor solicitando o envio das
+      mensagens existentes.</font><font face="Verdana,Arial,Helvetica,sans-serif" size="2"><br>
+    </font><font face="Verdana,Arial,Helvetica,sans-serif" size="2">O
+      servidor deve então realizar a operação
+      solicitada, retornando ao cliente uma resposta informando quantas
+      mensagens cadastradas existem e, caso exista mensagens
+      cadastradas, uma listagem contendo o nome do usuário e a
+      respectiva mensagem.<br>
+      O programa cliente, após receber a resposta do servidor,
+      deve exibir uma mensagem adequada na tela contendo as
+      informações recebidas, como no exemplo a seguir:</font><br>
+    <pre>	<span style="font-weight: bold;"></span><span style="font-weight: bold;">Mensagens cadastradas:</span> <span style="font-weight: bold;">2</span><br><span style="font-weight: bold;">	Usuário: fulano		Mensagem: Testando o cadastramento de mensagens.<br></span><span style="font-weight: bold;">	Usuário: ciclano	Mensagem: Compatilhamento de mensagens funcionando!</span><span style="font-weight: bold;"> <span style="font-family: Arial,Helvetica,sans-serif;"><br><br></span></span></pre>
+    <font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+        <h2><b>Detalhes da entrega<br>
+          </b></h2>
+      </font></font>
+    <font face="Arial,Helvetica,sans-serif" size="2"> <font face="Arial,Helvetica,sans-serif" size="2"><span style="font-weight: bold;"> </span></font></font><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2"><span style="font-weight: bold;">Prazo:</span> 20 de Agosto<br>
+      </font></font>
+    <p><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">Deve ser
+          entregue um <span style="font-weight: bold;">relatório
+            impresso</span>
+          contendo: </font></font></p>
+    <font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">
+        <li>detalhes do projeto da aplicação, apresentando
+          uma descrição de alto nível dos programas
+          implementados (contendo textos explicativos e diagramas) e o
+          formato das requisições e respostas enviadas<br>
+        </li>
+        <li>detalhes de
+          implementação relevantes (como por exemplo a
+          forma de armazenamento das informações
+          cadastradas no servidor e o que mais o grupo julgar
+          importante) <br>
+        </li>
+        <li>descrição do processo de
+          compilação (<font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">contendo
+              screenshots que mostrem os comando utilizados na
+              compilação e os resultados obtidos) </font></font></li>
+        <li>descrição dos testes realizados (<font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">contendo
+              screenshots da execução dos programas e os
+              resultados obtidos, </font></font><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">demonstrando
+              que o
+              programa realiza as tarefas solicitadas</font></font><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">) </font></font><br>
+          <font face="Arial,Helvetica,sans-serif" size="2">
+          </font>
+        </li>
+        <li>os códigos fonte dos programas implementados</li>
+        <br>
+      </font><font face="Arial,Helvetica,sans-serif" size="2"><font face="Arial,Helvetica,sans-serif" size="2">Além disso,
+        cada integrante do grupo deverá postar em seu escaninho
+        no AVA o <span style="font-weight: bold;">relatório em
+          formato digital (.doc ou .pdf)</span>
+        e o <span style="font-weight: bold;">código fonte de
+          todos os programas implementados</span>. </font></font><br>
+    <font face="Arial,Helvetica,sans-serif" size="2"><font face="Verdana,Arial,Helvetica,sans-serif" size="2">
+        <script type="text/javascript">_uacct = "UA-714694-2";
+u
+</script></font></font>
+  
+
+</font></font></body></html>
