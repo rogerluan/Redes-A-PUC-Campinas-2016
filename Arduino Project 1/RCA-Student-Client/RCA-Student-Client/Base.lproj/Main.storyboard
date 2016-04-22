@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="qtX-DU-PZb">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <scenes>
+        <!--Student Client-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="LoginViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
+                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mmP-U7-oxh">
+                                <rect key="frame" x="252" y="304" width="97" height="30"/>
+                                <state key="normal" title="Connect"/>
+                                <connections>
+                                    <action selector="connectAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zJS-7C-9yU"/>
+                                </connections>
+                            </button>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="12345678" borderStyle="roundedRect" placeholder="RA" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="e0S-ti-Hpx">
+                                <rect key="frame" x="252" y="266" width="97" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="97" id="6rY-Pv-J2m"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="e0S-ti-Hpx" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" constant="-19" id="2sl-2Z-O7N"/>
+                            <constraint firstItem="e0S-ti-Hpx" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="JIr-Ao-nWa"/>
+                            <constraint firstItem="mmP-U7-oxh" firstAttribute="top" secondItem="e0S-ti-Hpx" secondAttribute="bottom" constant="8" id="S00-xs-I0W"/>
+                            <constraint firstItem="mmP-U7-oxh" firstAttribute="width" secondItem="e0S-ti-Hpx" secondAttribute="width" id="uzG-VA-VN7"/>
+                            <constraint firstItem="mmP-U7-oxh" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="xX1-ko-549"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" title="Student Client" id="NPw-C8-59u"/>
+                    <connections>
+                        <outlet property="RATextField" destination="e0S-ti-Hpx" id="vDu-dt-SU9"/>
+                        <segue destination="4QW-2q-Y0u" kind="show" identifier="ConnectionSegue" id="ODy-Xg-cDn"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1108" y="487"/>
+        </scene>
+        <!--Action View Controller-->
+        <scene sceneID="NEJ-OK-c86">
+            <objects>
+                <viewController id="4QW-2q-Y0u" customClass="ActionViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="h0s-8q-JXX"/>
+                        <viewControllerLayoutGuide type="bottom" id="MTM-bY-ND5"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="NdL-Wz-CGt">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fEb-VB-Zux">
+                                <rect key="frame" x="259" y="285" width="82" height="30"/>
+                                <state key="normal" title="I'm Present!"/>
+                                <connections>
+                                    <action selector="presentAction:" destination="4QW-2q-Y0u" eventType="touchUpInside" id="5Hv-hp-KP2"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="fEb-VB-Zux" firstAttribute="centerY" secondItem="NdL-Wz-CGt" secondAttribute="centerY" id="oEj-LZ-OhQ"/>
+                            <constraint firstItem="fEb-VB-Zux" firstAttribute="centerX" secondItem="NdL-Wz-CGt" secondAttribute="centerX" id="uCN-QV-4YQ"/>
+                        </constraints>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="twf-0X-boc" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1795" y="487"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="QDp-ur-4r5">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="qtX-DU-PZb" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="kkf-G5-Uge">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="yzO-fl-wv3"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="zGf-pu-78k" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="383" y="487"/>
+        </scene>
+    </scenes>
+</document>

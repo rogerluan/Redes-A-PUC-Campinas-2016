@@ -1,0 +1,344 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C59253A51CC9667E009020DB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C59253A41CC9667E009020DB /* main.m */; };
+		C59253A81CC9667E009020DB /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C59253A71CC9667E009020DB /* AppDelegate.m */; };
+		C59253AE1CC9667E009020DB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C59253AC1CC9667E009020DB /* Main.storyboard */; };
+		C59253B01CC9667E009020DB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C59253AF1CC9667E009020DB /* Assets.xcassets */; };
+		C59253B31CC9667E009020DB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C59253B11CC9667E009020DB /* LaunchScreen.storyboard */; };
+		C59253BC1CC967CC009020DB /* LoginViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C59253BB1CC967CC009020DB /* LoginViewController.m */; };
+		C59253C11CC96A86009020DB /* ActionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C59253C01CC96A86009020DB /* ActionViewController.m */; };
+		C59253C41CC9727C009020DB /* NetworkManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C59253C31CC9727C009020DB /* NetworkManager.m */; };
+		C59253C81CC975A3009020DB /* ErrorManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C59253C71CC975A3009020DB /* ErrorManager.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		C59253A01CC9667D009020DB /* RCA-Student-Client.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RCA-Student-Client.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C59253A41CC9667E009020DB /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C59253A61CC9667E009020DB /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C59253A71CC9667E009020DB /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C59253AD1CC9667E009020DB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		C59253AF1CC9667E009020DB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C59253B21CC9667E009020DB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		C59253B41CC9667E009020DB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C59253BA1CC967CC009020DB /* LoginViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoginViewController.h; sourceTree = "<group>"; };
+		C59253BB1CC967CC009020DB /* LoginViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoginViewController.m; sourceTree = "<group>"; };
+		C59253BF1CC96A86009020DB /* ActionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ActionViewController.h; sourceTree = "<group>"; };
+		C59253C01CC96A86009020DB /* ActionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ActionViewController.m; sourceTree = "<group>"; };
+		C59253C21CC9727C009020DB /* NetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkManager.h; sourceTree = "<group>"; };
+		C59253C31CC9727C009020DB /* NetworkManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NetworkManager.m; sourceTree = "<group>"; };
+		C59253C61CC975A3009020DB /* ErrorManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ErrorManager.h; sourceTree = "<group>"; };
+		C59253C71CC975A3009020DB /* ErrorManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ErrorManager.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C592539D1CC9667D009020DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C59253971CC9667D009020DB = {
+			isa = PBXGroup;
+			children = (
+				C59253A21CC9667E009020DB /* RCA-Student-Client */,
+				C59253A11CC9667D009020DB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C59253A11CC9667D009020DB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C59253A01CC9667D009020DB /* RCA-Student-Client.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C59253A21CC9667E009020DB /* RCA-Student-Client */ = {
+			isa = PBXGroup;
+			children = (
+				C59253AC1CC9667E009020DB /* Main.storyboard */,
+				C59253AF1CC9667E009020DB /* Assets.xcassets */,
+				C59253B11CC9667E009020DB /* LaunchScreen.storyboard */,
+				C59253BD1CC967D4009020DB /* Controller */,
+				C59253C51CC9727F009020DB /* Model */,
+				C59253A61CC9667E009020DB /* AppDelegate.h */,
+				C59253A71CC9667E009020DB /* AppDelegate.m */,
+				C59253B41CC9667E009020DB /* Info.plist */,
+				C59253A31CC9667E009020DB /* Supporting Files */,
+			);
+			path = "RCA-Student-Client";
+			sourceTree = "<group>";
+		};
+		C59253A31CC9667E009020DB /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C59253A41CC9667E009020DB /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C59253BD1CC967D4009020DB /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				C59253BA1CC967CC009020DB /* LoginViewController.h */,
+				C59253BB1CC967CC009020DB /* LoginViewController.m */,
+				C59253BF1CC96A86009020DB /* ActionViewController.h */,
+				C59253C01CC96A86009020DB /* ActionViewController.m */,
+			);
+			name = Controller;
+			sourceTree = "<group>";
+		};
+		C59253C51CC9727F009020DB /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				C59253C21CC9727C009020DB /* NetworkManager.h */,
+				C59253C31CC9727C009020DB /* NetworkManager.m */,
+				C59253C61CC975A3009020DB /* ErrorManager.h */,
+				C59253C71CC975A3009020DB /* ErrorManager.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C592539F1CC9667D009020DB /* RCA-Student-Client */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C59253B71CC9667E009020DB /* Build configuration list for PBXNativeTarget "RCA-Student-Client" */;
+			buildPhases = (
+				C592539C1CC9667D009020DB /* Sources */,
+				C592539D1CC9667D009020DB /* Frameworks */,
+				C592539E1CC9667D009020DB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "RCA-Student-Client";
+			productName = "RCA-Student-Client";
+			productReference = C59253A01CC9667D009020DB /* RCA-Student-Client.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C59253981CC9667D009020DB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = "Roger Oba";
+				TargetAttributes = {
+					C592539F1CC9667D009020DB = {
+						CreatedOnToolsVersion = 7.3;
+					};
+				};
+			};
+			buildConfigurationList = C592539B1CC9667D009020DB /* Build configuration list for PBXProject "RCA-Student-Client" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C59253971CC9667D009020DB;
+			productRefGroup = C59253A11CC9667D009020DB /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C592539F1CC9667D009020DB /* RCA-Student-Client */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C592539E1CC9667D009020DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C59253B31CC9667E009020DB /* LaunchScreen.storyboard in Resources */,
+				C59253B01CC9667E009020DB /* Assets.xcassets in Resources */,
+				C59253AE1CC9667E009020DB /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C592539C1CC9667D009020DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C59253A81CC9667E009020DB /* AppDelegate.m in Sources */,
+				C59253A51CC9667E009020DB /* main.m in Sources */,
+				C59253C81CC975A3009020DB /* ErrorManager.m in Sources */,
+				C59253C11CC96A86009020DB /* ActionViewController.m in Sources */,
+				C59253C41CC9727C009020DB /* NetworkManager.m in Sources */,
+				C59253BC1CC967CC009020DB /* LoginViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		C59253AC1CC9667E009020DB /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C59253AD1CC9667E009020DB /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		C59253B11CC9667E009020DB /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C59253B21CC9667E009020DB /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C59253B51CC9667E009020DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		C59253B61CC9667E009020DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C59253B81CC9667E009020DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = "RCA-Student-Client/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rogeroba.RCA-Student-Client";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		C59253B91CC9667E009020DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = "RCA-Student-Client/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.rogeroba.RCA-Student-Client";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C592539B1CC9667D009020DB /* Build configuration list for PBXProject "RCA-Student-Client" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C59253B51CC9667E009020DB /* Debug */,
+				C59253B61CC9667E009020DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C59253B71CC9667E009020DB /* Build configuration list for PBXNativeTarget "RCA-Student-Client" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C59253B81CC9667E009020DB /* Debug */,
+				C59253B91CC9667E009020DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C59253981CC9667D009020DB /* Project object */;
+}
