@@ -24,7 +24,6 @@
         possibleRecoverySuggestion = [NSString stringWithFormat:@"\nPossible recovery suggestion: %@",error.localizedRecoverySuggestion];
     }
 
-    //To-do: Create custom user-friendly messages to each error log that makes sense to be presented to the user.
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:error.localizedDescription message:[NSString stringWithFormat:@"Possible reason: %@ %@",error.localizedFailureReason,possibleRecoverySuggestion] preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"OK") style:UIAlertActionStyleCancel handler:nil];
     [alert addAction:cancelAction];

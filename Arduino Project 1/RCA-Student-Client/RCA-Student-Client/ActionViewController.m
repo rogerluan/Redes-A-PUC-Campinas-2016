@@ -10,11 +10,6 @@
 #import "NetworkManager.h"
 #import "ErrorManager.h"
 
-struct message {
-    char RA[8];
-    bool isDoor;
-};
-
 @interface ActionViewController ()
 
 @end
@@ -25,6 +20,7 @@ struct message {
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self.navigationController setTitle:self.RA];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -34,10 +30,6 @@ struct message {
 #pragma mark - IBActions
 
 - (IBAction)presentAction:(id)sender {
-    
-//    struct message data;
-//    strcpy(data.RA,[self.RA UTF8String]);
-//    data.isDoor = NO;
     
     NSDictionary *data = @{@"RA":self.RA,@"isPresent":@YES};
     

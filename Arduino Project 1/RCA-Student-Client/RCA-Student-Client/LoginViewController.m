@@ -23,6 +23,11 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self.navigationController.navigationBar setBarTintColor: [UIColor colorWithRed:0.154 green:0.413 blue:0.691 alpha:1.000]];
+    [self.navigationController.navigationBar setTintColor:[UIColor colorWithRed:0.908 green:0.926 blue:0.932 alpha:1.000]];
+    [self.navigationController.navigationBar setTranslucent:NO];
+    [self.navigationController.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithRed:0.908 green:0.926 blue:0.932 alpha:1.000]}];
+    self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
 }
 
 - (void)didReceiveMemoryWarning {
@@ -32,12 +37,9 @@
 #pragma mark - Helpers -
 
 - (BOOL)shouldConnect {
-    NSLog(@"RA before normalizing: %@",self.RATextField.text);
     self.RATextField.text = [[self.RATextField.text componentsSeparatedByCharactersInSet:
                             [[NSCharacterSet decimalDigitCharacterSet] invertedSet]]
                            componentsJoinedByString:@""];
-//    self.RATextField.text = [self.RATextField.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    NSLog(@"RA after normalizing: %@",self.RATextField.text);
     if (![self.RATextField hasText]) {
         return NO;
     } else if (self.RATextField.text.length < 8) {
