@@ -18,7 +18,7 @@
 
 struct mensagem{
     char ra[8];
-    bool isDoor;
+    int isDoor;
     
     
 };
@@ -29,6 +29,7 @@ int main()
     int sockint,s, namelen,ns;
     struct sockaddr_in client, server;
     struct mensagem buf;
+    char bufferer[33];
 
     int doorCounter = 0,presenceCounter = 0;
     char alunosRA[300][8];
@@ -90,11 +91,15 @@ int main()
         }
         
        
-        if(recv(ns, &buf, sizeof(buf), 0) == -1)
+        if(recv(ns, &bufferer, sizeof(bufferer), 0) == -1)
         {
             perror("recvfrom()");
             exit(6);
         }
+        
+        printf("recebi\n");
+        printf(bufferer);
+        /*
         //identificacao de alguem que passou na porta
         if(buf.isDoor){
             
@@ -122,10 +127,10 @@ int main()
             
             
         }
-       
+       */
     
         //fecha o socket, pois apenas será recebido uma mensagem por conexao
-        close(s);
+       // close(s);
     
     }
   
