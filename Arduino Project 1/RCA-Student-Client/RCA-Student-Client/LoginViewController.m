@@ -23,11 +23,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self.navigationController.navigationBar setBarTintColor: [UIColor colorWithRed:0.154 green:0.413 blue:0.691 alpha:1.000]];
-    [self.navigationController.navigationBar setTintColor:[UIColor colorWithRed:0.908 green:0.926 blue:0.932 alpha:1.000]];
-    [self.navigationController.navigationBar setTranslucent:NO];
-    [self.navigationController.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithRed:0.908 green:0.926 blue:0.932 alpha:1.000]}];
-    self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
+    [self appearanceSetup];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -46,6 +42,14 @@
         return NO;
     }
     return YES;
+}
+
+- (void)appearanceSetup {
+    [self.navigationController.navigationBar setBarTintColor: [UIColor colorWithRed:0.154 green:0.413 blue:0.691 alpha:1.000]];
+    [self.navigationController.navigationBar setTintColor:[UIColor colorWithRed:0.908 green:0.926 blue:0.932 alpha:1.000]];
+    [self.navigationController.navigationBar setTranslucent:NO];
+    [self.navigationController.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor colorWithRed:0.908 green:0.926 blue:0.932 alpha:1.000]}];
+    self.navigationController.navigationBar.barStyle = UIBarStyleBlack;
 }
 
 #pragma mark - IBActions -

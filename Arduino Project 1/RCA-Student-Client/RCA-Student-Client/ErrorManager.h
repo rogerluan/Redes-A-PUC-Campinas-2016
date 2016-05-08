@@ -11,6 +11,7 @@
 
 #define ERROR_WRITING_DATA 1001
 #define ERROR_OPENING_STREAM 1002
+#define ERROR_NO_CONNECTION_FOUND 1003
 
 @interface ErrorManager : NSObject
 

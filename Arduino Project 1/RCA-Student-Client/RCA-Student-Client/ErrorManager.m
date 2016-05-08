@@ -10,7 +10,7 @@
 
 @implementation ErrorManager
 
-+ (NSError*)errorForErrorIdentifier:(NSInteger)errorIdentifier {
++ (NSError *)errorForErrorIdentifier:(NSInteger)errorIdentifier {
     return [NSError errorWithDomain:[[NSBundle mainBundle] bundleIdentifier]
                                code:errorIdentifier
                            userInfo:[self userInfoForErrorIdentifier:errorIdentifier]];
@@ -36,12 +36,20 @@
 
 #pragma mark - Helpers
 
-+ (NSDictionary*)userInfoForErrorIdentifier:(NSInteger)error {
++ (NSDictionary *)userInfoForErrorIdentifier:(NSInteger)error {
     
     switch (error) {
         case ERROR_WRITING_DATA:
             return @{NSLocalizedDescriptionKey: NSLocalizedString(@"Error Writing Data", nil),
                      NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This occured when trying to write an output to the opened socket, when trying to send message to the server.", nil)
+                     };
+        case ERROR_OPENING_STREAM:
+            return @{NSLocalizedDescriptionKey: NSLocalizedString(@"Error Opening Stream", nil),
+                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This occured when trying to open a stream.", nil)
+                     };
+        case ERROR_NO_CONNECTION_FOUND:
+            return @{NSLocalizedDescriptionKey: NSLocalizedString(@"There's no active connection.", nil),
+                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This error occured when trying to close a connection, while there wasnt't a connection available.", nil)
                      };
         default:
             return @{NSLocalizedDescriptionKey: NSLocalizedString(@"Invalid error", nil),

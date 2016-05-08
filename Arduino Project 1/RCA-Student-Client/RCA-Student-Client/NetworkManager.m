@@ -16,6 +16,7 @@
 
 @property (strong, nonatomic) NSInputStream *inputStream;
 @property (strong, nonatomic) NSOutputStream *outputStream;
+@property (assign, nonatomic) BOOL isConnected;
 
 @end
 
@@ -49,17 +50,6 @@
         case NSStreamEventHasSpaceAvailable: {
             if (stream == self.outputStream) {
                 NSLog(@"outputStream is ready.");
-                
-//                uint8_t *readBytes = (uint8_t *)[_data mutableBytes];
-//                readBytes += byteIndex; // instance variable to move pointer
-//                int data_len = [_data length];
-//                unsigned int len = ((data_len - byteIndex >= 1024) ?
-//                                    1024 : (data_len-byteIndex));
-//                uint8_t buf[len];
-//                (void)memcpy(buf, readBytes, len);
-//                len = [stream write:(const uint8_t *)buf maxLength:len];
-//                byteIndex += len;
-//                break;
             }
             break;
         }
@@ -120,25 +110,31 @@
         [self.outputStream open];
         
         NSLog(@"Status of outputStream: %lu", (unsigned long)[self.outputStream streamStatus]);
+        self.isConnected = YES;
         completion(nil);
     }
 }
 
 - (void)disconnectWithCompletion:(CompletionBlock)completion {
-    NSLog(@"Closing streams.");
-    
-    [self.inputStream close];
-    [self.outputStream close];
-    
-    [self.inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    [self.outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    
-    [self.inputStream setDelegate:nil];
-    [self.outputStream setDelegate:nil];
-    
-    self.inputStream = nil;
-    self.outputStream = nil;
-    completion(nil);
+    if (self.isConnected) {
+        NSLog(@"Closing streams.");
+        
+        [self.inputStream close];
+        [self.outputStream close];
+        
+        [self.inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [self.outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        
+        [self.inputStream setDelegate:nil];
+        [self.outputStream setDelegate:nil];
+        
+        self.inputStream = nil;
+        self.outputStream = nil;
+        self.isConnected = NO;
+        completion(nil);
+    } else {
+        completion([ErrorManager errorForErrorIdentifier:ERROR_NO_CONNECTION_FOUND]);
+    }
 }
 
 - (void)sendData:(NSDictionary *)info withCompletion:(CompletionBlock)completion {
@@ -155,7 +151,6 @@
     } else {
         NSLog(@"Output stream doesn't have space available.");
     }
-    
 }
 
 #pragma mark - Helpers - 
