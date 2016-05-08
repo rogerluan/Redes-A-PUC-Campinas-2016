@@ -13,40 +13,24 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include <stdbool.h>
-
-
-struct mensagem{
-    char ra[8];
-    int isDoor;
-    
-    
-};
-
 
 int main()
 {
-    int sockint,s, namelen,ns;
+    int s, namelen, ns;
     struct sockaddr_in client, server;
-    struct mensagem buf;
     char bufferer[33];
-
-    int doorCounter = 0,presenceCounter = 0;
-    char alunosRA[300][8];
     
-
+    int doorCounter = 0, presenceCounter = 0;
+    char alunosRA[300][8];
     
     /*
      * Cria um socket TCP (stream) para aguardar conexıes
      */
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-    {
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("Socket()");
         exit(2);
     }
 
-    
-    
     /*
      * Define a qual endereÁo IP e porta o servidor estar· ligado.
      * Porta = 0 -> faz com que seja utilizada uma porta qualquer livre.
@@ -60,8 +44,7 @@ int main()
     /*
      * Liga o servidor ‡ porta definida anteriormente.
      */
-    if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0)
-    {
+    if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0) {
         perror("bind()");
         exit(3);
     }
@@ -70,35 +53,29 @@ int main()
      * Prepara o socket para aguardar por conexıes e
      * cria uma fila de conexıes pendentes.
      */
-    //servidor fica esperando conexoes tcps, recebe uma mensagem e depois encerra ela, para que seja capaz
-    //de receber outra conexao.
+    //servidor fica esperando conexoes tcps, recebe uma mensagem e depois encerra ela, para que seja capaz de receber outra conexao.
     while (1) {
-        
-      
-        if (listen(s, 1) != 0)
-        {
+
+        if (listen(s, 1) != 0) {
             perror("Listen()");
             exit(4);
         }
         
-        
         //aceita uma conexao
         namelen = sizeof(client);
-        if ((ns = accept(s, (struct sockaddr *)&client, &namelen)) == -1)
-        {
+        if ((ns = accept(s, (struct sockaddr *)&client, &namelen)) == -1) {
             perror("Accept()");
             exit(5);
         }
         
        
-        if(recv(ns, &bufferer, sizeof(bufferer), 0) == -1)
-        {
+        if(recv(ns, &bufferer, sizeof(bufferer), 0) == -1) {
             perror("recvfrom()");
             exit(6);
         }
         
-        printf("recebi\n");
-        printf(bufferer);
+        printf("Dados recebidos: %s",bufferer);
+
         /*
         //identificacao de alguem que passou na porta
         if(buf.isDoor){
