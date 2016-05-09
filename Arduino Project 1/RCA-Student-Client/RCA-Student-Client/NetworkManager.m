@@ -9,8 +9,8 @@
 #import "NetworkManager.h"
 #import "ErrorManager.h"
 
-#define IP_ADDRESS @"192.168.1.101"
-#define PORT 8080
+#define IP_ADDRESS @"192.168.209.210"
+#define PORT 5002
 
 @interface NetworkManager() <NSStreamDelegate>
 
