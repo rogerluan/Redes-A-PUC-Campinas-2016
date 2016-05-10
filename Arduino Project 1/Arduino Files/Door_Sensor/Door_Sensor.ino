@@ -8,9 +8,12 @@
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x28, 0xF7 };
-IPAddress server(172, 16, 3, 77);
+IPAddress server(192, 168, 1, 104);
+byte ipAddress[] = {192, 168, 1, 103};
 
-unsigned int serverPort = 5000;      // local port to listen on
+byte googleServer[] = { 64, 233, 187, 99 }; // Google
+
+unsigned int serverPort = 5001;      // local port to listen on
 
 //EthernetUDP UDP; // An EthernetUDP instance to let us send and receive packets over UDP
 int minimumRange = 0; // Minimum distance of the sensor
@@ -34,14 +37,17 @@ void setup() {
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
     // try to congifure using IP address instead of DHCP:
-    Ethernet.begin(mac, server);
+    Ethernet.begin(mac, ipAddress);
   }
   // give the Ethernet shield a second to initialize:
   delay(1000);
   Serial.println("Connecting...");
 
   // if you get a connection, report back via serial:
-  if (client.connect(server, serverPort)) {
+  int connectionStatus = client.connect(ipAddress, serverPort);
+  Serial.println(connectionStatus);
+  
+  if (connectionStatus == 1) {
     Serial.println("Connected");
   } else {
     // if you didn't get a connection to the server:
@@ -53,10 +59,11 @@ void loop() {
 
     if (Serial.available() > 0) { //checks for errors
         int incomingByte = Serial.read();
-        Serial.flush();
-        if (incomingByte == 1) {
+        Serial.println(incomingByte);
+        if (incomingByte > 0) {
             client.println("RA:00000000,isDoor:1,isPresent:1");
         }
+        Serial.flush();
     }
 
     // if the server's disconnected, stop the client:
