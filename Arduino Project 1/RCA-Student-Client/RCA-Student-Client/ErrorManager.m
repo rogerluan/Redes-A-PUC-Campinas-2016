@@ -51,6 +51,14 @@
             return @{NSLocalizedDescriptionKey: NSLocalizedString(@"There's no active connection.", nil),
                      NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This error occured when trying to close a connection, while there wasnt't a connection available.", nil)
                      };
+        case ERROR_ALREADY_CONNECTED:
+            return @{NSLocalizedDescriptionKey: NSLocalizedString(@"There's a connection stablished already.", nil),
+                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This error occured when trying to open a connection, while there was already a stablished connection.", nil)
+                     };
+        case ERROR_INVALID_RESPONSE_FORMAT:
+            return @{NSLocalizedDescriptionKey: NSLocalizedString(@"Invalid Response.", nil),
+                     NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This error occurs when receiving a message with an unexpected format.", nil)
+                     };
         default:
             return @{NSLocalizedDescriptionKey: NSLocalizedString(@"Invalid error", nil),
                      NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"The action generated an unexpected error.", nil)

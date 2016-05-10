@@ -10,8 +10,19 @@
 
 typedef void(^CompletionBlock)(NSError *error);
 
+@protocol NetworkManagerDelegate <NSObject>
+
+@optional
+- (void)networkManagerDidConnect:(id)networkManager;
+- (void)networkManagerDidDisconnect:(id)networkManager;
+- (void)networkManager:(id)networkManager didReceiveError:(NSError *)error;
+- (void)networkManager:(id)networkManager didReceiveData:(NSData *)data;
+
+@end
+
 @interface NetworkManager : NSObject
 
+@property (assign, nonatomic) id<NetworkManagerDelegate>delegate;
 @property (strong, nonatomic) NSString *port;
 
 + (id)sharedManager;

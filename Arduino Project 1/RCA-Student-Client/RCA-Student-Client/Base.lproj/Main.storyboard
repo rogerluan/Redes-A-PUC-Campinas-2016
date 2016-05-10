@@ -62,6 +62,9 @@
                                     <constraint firstAttribute="width" secondItem="XWy-z1-yur" secondAttribute="height" multiplier="1365:598" id="vKd-B7-2wO"/>
                                 </constraints>
                             </imageView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="white" translatesAutoresizingMaskIntoConstraints="NO" id="zs6-od-c93">
+                                <rect key="frame" x="436" y="289" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
@@ -85,6 +88,8 @@
                     <navigationItem key="navigationItem" title="Student Client" id="NPw-C8-59u"/>
                     <connections>
                         <outlet property="RATextField" destination="e0S-ti-Hpx" id="vDu-dt-SU9"/>
+                        <outlet property="activityIndicator" destination="zs6-od-c93" id="p9w-6q-AuL"/>
+                        <outlet property="connectButton" destination="mmP-U7-oxh" id="j28-zx-ROz"/>
                         <segue destination="4QW-2q-Y0u" kind="show" identifier="ConnectionSegue" id="ODy-Xg-cDn"/>
                     </connections>
                 </viewController>
@@ -118,14 +123,24 @@
                                     <action selector="presentAction:" destination="4QW-2q-Y0u" eventType="touchUpInside" id="5Hv-hp-KP2"/>
                                 </connections>
                             </button>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="Qc3-xS-IZ6">
+                                <rect key="frame" x="282" y="281" width="37" height="37"/>
+                                <color key="color" red="0.15410047769999999" green="0.41306763889999998" blue="0.69063264130000002" alpha="1" colorSpace="calibratedRGB"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="MTM-bY-ND5" firstAttribute="top" secondItem="fEb-VB-Zux" secondAttribute="bottom" constant="20" id="0OP-IP-wgX"/>
                             <constraint firstAttribute="leadingMargin" secondItem="fEb-VB-Zux" secondAttribute="leading" constant="20" id="CRM-IA-Ur6"/>
                             <constraint firstAttribute="trailingMargin" secondItem="fEb-VB-Zux" secondAttribute="trailing" constant="-20" id="PdY-ja-vpz"/>
+                            <constraint firstItem="Qc3-xS-IZ6" firstAttribute="centerX" secondItem="NdL-Wz-CGt" secondAttribute="centerX" id="QQo-du-rkz"/>
+                            <constraint firstItem="Qc3-xS-IZ6" firstAttribute="centerY" secondItem="NdL-Wz-CGt" secondAttribute="centerY" id="e2B-Ar-gyI"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="activityIndicator" destination="Qc3-xS-IZ6" id="pLB-wZ-tUt"/>
+                        <outlet property="presentButton" destination="fEb-VB-Zux" id="u7h-Fg-HFg"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="twf-0X-boc" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

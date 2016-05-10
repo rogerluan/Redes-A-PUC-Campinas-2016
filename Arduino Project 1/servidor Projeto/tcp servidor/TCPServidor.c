@@ -57,7 +57,7 @@ int main()
      * os endereÁos IP
      */
     server.sin_family      = AF_INET;   /* Tipo do endereÁo             */
-    server.sin_port        = htons(5001);         /* Escolhe uma porta disponÌvel */
+    server.sin_port        = htons(5000);         /* Escolhe uma porta disponÌvel */
     server.sin_addr.s_addr = INADDR_ANY;/* EndereÁo IP do servidor      */
     
     /*
@@ -75,7 +75,7 @@ int main()
      */
     //servidor fica esperando conexoes tcps, recebe uma mensagem e depois encerra ela, para que seja capaz
     //de receber outra conexao.
-   // printf("pronto para mais");
+    //printf("pronto para mais");
 
   
     while (1) {

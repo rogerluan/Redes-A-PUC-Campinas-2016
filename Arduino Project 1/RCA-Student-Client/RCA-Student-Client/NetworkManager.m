@@ -9,7 +9,7 @@
 #import "NetworkManager.h"
 #import "ErrorManager.h"
 
-#define IP_ADDRESS @"192.168.1.107"
+#define IP_ADDRESS @"172.20.10.5"
 #define PORT 5000
 
 @interface NetworkManager() <NSStreamDelegate>
@@ -28,59 +28,72 @@
     static NetworkManager *sharedMyManager = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sharedMyManager = [[self alloc] init];
+        sharedMyManager = [self new];
     });
     return sharedMyManager;
-}
-
-- (id)init {
-    if (self = [super init]) {
-        [self.inputStream setDelegate:self];
-        [self.outputStream setDelegate:self];
-    }
-    return self;
 }
 
 #pragma mark - Stream Delegate Methods -
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode {
-    NSLog(@"Stream triggered.");
+    NSLog(@"Stream handleEvent method call.");
     
-    switch(eventCode) {
+    switch (eventCode) {
         case NSStreamEventHasSpaceAvailable: {
             if (stream == self.outputStream) {
-                NSLog(@"outputStream is ready.");
+                NSLog(@"OutputStream is ready.");
+                if ([self.delegate respondsToSelector:@selector(networkManagerDidConnect:)]) {
+                    [self.delegate networkManagerDidConnect:self];
+                }
             }
             break;
         }
         case NSStreamEventHasBytesAvailable: {
-            if(stream == self.inputStream) {
-                NSLog(@"inputStream is ready.");
+            if (stream == self.inputStream) {
+                NSLog(@"InputStream is ready.");
                 
                 uint8_t buf[1024];
                 NSInteger len = 0;
                 
                 len = [self.inputStream read:buf maxLength:1024];
                 
-                if(len > 0) {
-                    NSMutableData* data=[[NSMutableData alloc] initWithLength:0];
+                if (len > 0) {
+                    NSMutableData *data = [[NSMutableData alloc] initWithLength:0];
                     
-                    [data appendBytes: (const void *)buf length:len];
+                    [data appendBytes:(const void *)buf length:len];
                     
-                    NSString *s = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-                    
-                    NSLog(@"Reading in the following:");
-                    NSLog(@"%@", s);
+                    if ([self.delegate respondsToSelector:@selector(networkManager:didReceiveData:)]) {
+                        [self.delegate networkManager:self didReceiveData:data];
+                    }
                 }
             } 
             break;
         }
         case NSStreamEventErrorOccurred: {
-            NSLog(@"Can not connect to the host!");
+            //to-do: return an appropriate error message here.
+            if ([self.delegate respondsToSelector:@selector(networkManager:didReceiveError:)]) {
+                [self.delegate networkManager:self didReceiveError:nil];
+            }
+            
+            NSLog(@"NSStreamEventErrorOccurred: Can not connect to the host!");
             break;
         }
         case NSStreamEventOpenCompleted: {
-            NSLog(@"Stream opened.");
+            if ([stream isEqual:self.inputStream]) {
+                NSLog(@"Input stream has successfully opened.");
+            } else if ([stream isEqual:self.outputStream]){
+                NSLog(@"Output stream has successfully opened.");
+            } else {
+                NSLog(@"NSStreamEventOpenCompleted: an unknown stream has been opened.");
+            }
+            break;
+        }
+        case NSStreamEventEndEncountered: {
+            NSLog(@"NSStreamEventEndEncountered");
+            break;
+        }
+        case NSStreamEventNone: {
+            NSLog(@"NSStreamEventNone");
             break;
         }
         default: {
@@ -92,26 +105,38 @@
 
 - (void)connectWithCompletion:(CompletionBlock)completion {
     
-    CFReadStreamRef readStream;
-    CFWriteStreamRef writeStream;
-    CFStreamCreatePairWithSocketToHost(NULL, (CFStringRef)@"localhost", PORT, &readStream, &writeStream);
-    
-    if (!CFWriteStreamOpen(writeStream)) {
-        NSLog(@"Error opening writeStream.");
-        completion([ErrorManager errorForErrorIdentifier:ERROR_OPENING_STREAM]);
+    if (!self.isConnected) {
+        CFReadStreamRef readStream;
+        CFWriteStreamRef writeStream;
+        
+#if (TARGET_IPHONE_SIMULATOR)
+        CFStreamCreatePairWithSocketToHost(NULL, (CFStringRef)@"localhost", PORT, &readStream, &writeStream);
+#else //iPhone Device
+        CFStreamCreatePairWithSocketToHost(NULL, (CFStringRef)IP_ADDRESS, PORT, &readStream, &writeStream);
+#endif
+        
+        if (!CFWriteStreamOpen(writeStream)) {
+            NSLog(@"Error opening writeStream.");
+            completion([ErrorManager errorForErrorIdentifier:ERROR_OPENING_STREAM]);
+        } else {
+            self.inputStream = (__bridge_transfer NSInputStream *)readStream;
+            self.outputStream = (__bridge_transfer NSOutputStream *)writeStream;
+            
+            [self.inputStream scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+            [self.outputStream scheduleInRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+            
+            [self.inputStream open];
+            [self.outputStream open];
+            
+            self.inputStream.delegate = self;
+            self.outputStream.delegate = self;
+            
+            self.isConnected = YES;
+            completion(nil);
+        }
+        
     } else {
-        self.inputStream = (__bridge_transfer NSInputStream *)readStream;
-        self.outputStream = (__bridge_transfer NSOutputStream *)writeStream;
-        
-        [self.inputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        [self.outputStream scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        
-        [self.inputStream open];
-        [self.outputStream open];
-        
-        NSLog(@"Status of outputStream: %lu", (unsigned long)[self.outputStream streamStatus]);
-        self.isConnected = YES;
-        completion(nil);
+        completion([ErrorManager errorForErrorIdentifier:ERROR_ALREADY_CONNECTED]);
     }
 }
 
@@ -122,8 +147,8 @@
         [self.inputStream close];
         [self.outputStream close];
         
-        [self.inputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-        [self.outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+        [self.inputStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
+        [self.outputStream removeFromRunLoop:[NSRunLoop mainRunLoop] forMode:NSDefaultRunLoopMode];
         
         [self.inputStream setDelegate:nil];
         [self.outputStream setDelegate:nil];
@@ -131,6 +156,11 @@
         self.inputStream = nil;
         self.outputStream = nil;
         self.isConnected = NO;
+        
+        if ([self.delegate respondsToSelector:@selector(networkManagerDidDisconnect:)]) {
+            [self.delegate networkManagerDidDisconnect:self];
+        }
+        
         completion(nil);
     } else {
         completion([ErrorManager errorForErrorIdentifier:ERROR_NO_CONNECTION_FOUND]);
@@ -140,7 +170,6 @@
 - (void)sendData:(NSDictionary *)info withCompletion:(CompletionBlock)completion {
     NSData *data = [[NSData alloc] initWithData:[[self serializeObject:info] dataUsingEncoding:NSASCIIStringEncoding]];
     
-    NSLog(@"Output Stream Error: %@",self.outputStream.streamError);
     if ([self.outputStream hasSpaceAvailable]) {
         NSInteger writeLength = [self.outputStream write:(const uint8_t*)[data bytes] maxLength:[data length]];
         if (writeLength != -1) {

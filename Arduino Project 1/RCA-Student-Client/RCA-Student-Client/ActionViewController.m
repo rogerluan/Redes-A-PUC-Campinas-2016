@@ -10,7 +10,10 @@
 #import "NetworkManager.h"
 #import "ErrorManager.h"
 
-@interface ActionViewController ()
+@interface ActionViewController () <NetworkManagerDelegate>
+
+@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
+@property (strong, nonatomic) IBOutlet UIButton *presentButton;
 
 @end
 
@@ -20,6 +23,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.activityIndicator.hidden = YES;
     [self.navigationController setTitle:self.RA];
 }
 
@@ -27,31 +31,91 @@
     [super didReceiveMemoryWarning];
 }
 
-#pragma mark - IBActions
+- (void)viewWillDisappear:(BOOL)animated {
+    [[NetworkManager sharedManager] disconnectWithCompletion:^(NSError *error) {
+        if (error) {
+            NSLog(@"An error occured: %@",error.description);
+        }
+    }];
+    [[NetworkManager sharedManager] setDelegate:nil];
+}
+
+#pragma mark - Network Manager Delegate Methods - 
+
+- (void)networkManagerDidDisconnect:(id)networkManager {
+    NSLog(@"ActionViewController: Delegate method call: did disconnect.");
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)networkManager:(id)networkManager receivedError:(NSError *)error {
+    NSLog(@"ActionViewController: Delegate method call: received error: %@",error);
+    [self presentViewController:[ErrorManager alertControllerFromError:error] animated:YES completion:nil];
+}
+
+- (void)networkManager:(id)networkManager didReceiveData:(NSData *)data {
+    if (data) {
+        NSString *stringData = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+        NSLog(@"Reading in the following: %@",stringData);
+        
+        if ([self isDataValid:stringData]) {
+            [[NetworkManager sharedManager] disconnectWithCompletion:^(NSError *error) {
+                if (!error) {
+                    UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Confirmed!",nil) message:NSLocalizedString(@"You have succesfully answered to the roll call. We'll disconnect you now.",nil) preferredStyle:UIAlertControllerStyleAlert];
+                    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"OK") style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+                        [self dismissViewControllerAnimated:YES completion:nil];
+                    }];
+                    [alert addAction:cancelAction];
+                    [self presentViewController:alert animated:YES completion:nil];
+                } else {
+                    [self presentViewController:[ErrorManager alertControllerFromError:error] animated:YES completion:nil];
+                }
+            }];
+        } else {
+            [self presentViewController:[ErrorManager alertControllerFromErrorIdentifier:ERROR_INVALID_RESPONSE_FORMAT] animated:YES completion:nil];
+        }
+    }
+}
+
+#pragma mark - IBActions -
 
 - (IBAction)presentAction:(id)sender {
-    
     NSDictionary *data = @{@"RA":self.RA,@"isPresent":@YES};
     
+    [self animateActivityIndicator:YES];
     [[NetworkManager sharedManager] sendData:data withCompletion:^(NSError *error) {
-        if (!error) {
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Confirmed!",nil) message:NSLocalizedString(@"You have succesfully answered to the roll call. We'll disconnect you now.",nil) preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"OK") style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                [[NetworkManager sharedManager] disconnectWithCompletion:^(NSError *error) {
-                    if (!error) {
-                        [self dismissViewControllerAnimated:YES completion:nil];
-                    } else {
-                        [self presentViewController:[ErrorManager alertControllerFromError:error] animated:YES completion:nil];
-                    }
-                }];
-            }];
-            [alert addAction:cancelAction];
-            [self presentViewController:alert animated:YES completion:nil];
-        } else {
+        [self animateActivityIndicator:NO];
+        if (error) {
             [self presentViewController:[ErrorManager alertControllerFromError:error] animated:YES completion:nil];
+        } else {
+            /**
+             *  TEST
+             *
+             */
+            NSString *testString = @"RA:12345678,recebeu:1";
+            NSData *testData = [[NSData alloc] initWithData:[testString dataUsingEncoding:NSASCIIStringEncoding]];
+            [self networkManager:[NetworkManager sharedManager] didReceiveData:testData];
+            /**
+             *  END TEST
+             *
+             */
         }
     }];
 }
 
+#pragma mark - Helpers - 
+
+- (void)animateActivityIndicator:(BOOL)animate {
+    self.activityIndicator.hidden = !animate;
+    self.presentButton.enabled = !animate;
+    animate ? [self.activityIndicator startAnimating] : [self.activityIndicator stopAnimating];
+}
+
+- (BOOL)isDataValid:(NSString *)data {
+    /**
+     *  Response format: `RA:12345678,recebeu:1` without quotes
+     */
+    NSArray *componentsArray = [data componentsSeparatedByString:@":"];
+    return [[componentsArray objectAtIndex:2] isEqualToString:@"1"];
+}
 
 @end
