@@ -48,11 +48,12 @@
 }
 
 - (void)networkManager:(id)networkManager receivedError:(NSError *)error {
-    NSLog(@"ActionViewController: Delegate method call: received error: %@",error);
+    NSLog(@"ActionViewController: Delegate method call: received error: %@", error);
     [self presentViewController:[ErrorManager alertControllerFromError:error] animated:YES completion:nil];
 }
 
 - (void)networkManager:(id)networkManager didReceiveData:(NSData *)data {
+    NSLog(@"ActionViewController: Delegate method call: didReceiveData: %@", data);
     if (data) {
         NSString *stringData = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
         NSLog(@"Reading in the following: %@",stringData);
@@ -60,9 +61,10 @@
         if ([self isDataValid:stringData]) {
             [[NetworkManager sharedManager] disconnectWithCompletion:^(NSError *error) {
                 if (!error) {
+                    __weak typeof(self) weakSelf = self;
                     UIAlertController *alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Confirmed!",nil) message:NSLocalizedString(@"You have succesfully answered to the roll call. We'll disconnect you now.",nil) preferredStyle:UIAlertControllerStyleAlert];
                     UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"OK", @"OK") style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
-                        [self dismissViewControllerAnimated:YES completion:nil];
+                        [weakSelf dismissViewControllerAnimated:YES completion:nil];
                     }];
                     [alert addAction:cancelAction];
                     [self presentViewController:alert animated:YES completion:nil];
@@ -73,6 +75,8 @@
         } else {
             [self presentViewController:[ErrorManager alertControllerFromErrorIdentifier:ERROR_INVALID_RESPONSE_FORMAT] animated:YES completion:nil];
         }
+    } else {
+        NSLog(@"ActionViewController: Delegate method call: received invalid data. Error.");
     }
 }
 
@@ -91,13 +95,9 @@
              *  TEST
              *
              */
-            NSString *testString = @"RA:12345678,recebeu:1";
-            NSData *testData = [[NSData alloc] initWithData:[testString dataUsingEncoding:NSASCIIStringEncoding]];
-            [self networkManager:[NetworkManager sharedManager] didReceiveData:testData];
-            /**
-             *  END TEST
-             *
-             */
+//            NSString *testString = @"RA:12345678,recebeu:1";
+//            NSData *testData = [[NSData alloc] initWithData:[testString dataUsingEncoding:NSASCIIStringEncoding]];
+//            [self networkManager:[NetworkManager sharedManager] didReceiveData:testData];
         }
     }];
 }
@@ -114,8 +114,9 @@
     /**
      *  Response format: `RA:12345678,recebeu:1` without quotes
      */
+    data = [data stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     NSArray *componentsArray = [data componentsSeparatedByString:@":"];
-    return [[componentsArray objectAtIndex:2] isEqualToString:@"1"];
+    return [[componentsArray objectAtIndex:2] isEqualToString:@"1\0"];
 }
 
 @end

@@ -218,17 +218,17 @@ int main()
                             resp[17] = 'e';
                             resp[18] = 'u';
                             resp[19] = ':';
-                            resp[20] = '0';
+                            resp[20] = '1';
                             resp[21] = '\0';
 
                             //comentado aguardando cliente receber
-                            /*
+                            
                             if (send(ns, resp, strlen(resp)+1, 0) < 0)
                             {
                                 perror("Send()");
                                 exit(7);
                             }
-                            */
+                            
                             
                             
                         }

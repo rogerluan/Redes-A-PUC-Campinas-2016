@@ -36,7 +36,6 @@
 #pragma mark - Stream Delegate Methods -
 
 - (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode {
-    NSLog(@"Stream handleEvent method call.");
     
     switch (eventCode) {
         case NSStreamEventHasSpaceAvailable: {
