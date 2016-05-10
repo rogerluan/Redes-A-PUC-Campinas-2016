@@ -36,6 +36,7 @@ struct data{
     
     char alunosRA[300][9];
     int count;
+    int doorCounter
 };
 
 
@@ -47,7 +48,6 @@ int main()
     struct mensagem buf;
     char bufferer[33];
 
-    int doorCounter = 0;
     
     //memoria = mmap(NULL, sizeof *memoria, PROT_READ | PROT_WRITE,MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     
@@ -56,6 +56,7 @@ int main()
     int shmid = shmget(IPC_PRIVATE, shmsize, IPC_CREAT | 0666);
     struct data *data = shmat(shmid, (void *) 0, 0);
     data->count = 0;
+    data->doorCounter = 0;
     
     
     
@@ -170,7 +171,7 @@ int main()
             //identificacao de alguem que passou na porta
             if(buf.isDoor){
                 // printf("contando");
-                doorCounter++;
+                data->doorCounter++;
                 
             }else{
                 //requisicao do aplicativo,inicialmente checa se o RA ja se encontra no sistema
@@ -282,6 +283,7 @@ int main()
             fflush(stdout);
             
             printf("\n\n----------\n\n");
+            printf("entraram %d pessoas\n----------\nRAs cadastrados:\n",data->doorCounter);
             
             for (int i  = 0; i < data->count; i++) {
                 printf("%s\n",data->alunosRA[i]);
