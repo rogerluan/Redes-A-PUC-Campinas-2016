@@ -8,14 +8,13 @@
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x00, 0x28, 0xF7 };
-IPAddress server(192, 168, 1, 104);
-byte ipAddress[] = {192, 168, 1, 103};
+IPAddress server(192, 168, 0, 104);
+byte ipAddress[] = {192, 168, 0, 104};
 
 byte googleServer[] = { 64, 233, 187, 99 }; // Google
 
-unsigned int serverPort = 5001;      // local port to listen on
+unsigned int serverPort = 5000;      // local port to listen on
 
-//EthernetUDP UDP; // An EthernetUDP instance to let us send and receive packets over UDP
 int minimumRange = 0; // Minimum distance of the sensor
 int maximumRange = 90; // Maximum width of the door
 long duration, distance; // Duration used to calculate distance
@@ -57,60 +56,58 @@ void setup() {
 
 void loop() {
 
+/*  
     if (Serial.available() > 0) { //checks for errors
         int incomingByte = Serial.read();
         Serial.println(incomingByte);
         if (incomingByte > 0) {
-            client.println("RA:00000000,isDoor:1,isPresent:1");
+            client.println("RA:00000000,isDoor:1,isPresent:0");
         }
         Serial.flush();
     }
-
+*/
     // if the server's disconnected, stop the client:
     if (!client.connected()) {
         Serial.println();
         Serial.println("Disconnecting.");
         client.stop();
-
-        // do nothing forevermore:
-        while (true);
+        //if server disconnect try to connect again
+        setup();
+      
     }
   
     /* The following triggerPin/echoPin cycle is used to determine the
      distance of the nearest object by bouncing soundwaves off of it. */
-//    digitalWrite(triggerPin, LOW);
-//    delayMicroseconds(2);
-//    
-//    digitalWrite(triggerPin, HIGH);
-//    delayMicroseconds(10);
-//    
-//    digitalWrite(triggerPin, LOW);
-//    duration = pulseIn(echoPin, HIGH);
-//    
-//    //Calculate the distance (in cm) based on the speed of sound.
-//    distance = duration/58.2;
-//    
-//    if (distance >= maximumRange || distance <= minimumRange) { //if the range is out of the bounds
-//        /*
-//         * This shouldn't do anything. Just log some error (or light a LED).
-//         */
-//        Serial.println("-1");
-//        digitalWrite(LEDPin, HIGH);
-//    } else { //if the range is within the defined bounds
-//        /* Send the distance to the computer using Serial protocol, and
-//         turn LED OFF to indicate successful reading. */
-//        Serial.println(distance);
-//        digitalWrite(LEDPin, LOW);
-//
-//        /*
-//         * Here we should send a message to our server
-//         * to ket it know that someone passed through the door.
-//         */
-//        UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
-//        UDP.write("Someone passed.");
-//        UDP.endPacket();
-//    }
-//    
-//    //Delay 50ms before next reading.
-//    delay(50);
+    digitalWrite(triggerPin, LOW);
+    delayMicroseconds(2);
+    
+    digitalWrite(triggerPin, HIGH);
+    delayMicroseconds(10);
+    
+    digitalWrite(triggerPin, LOW);
+    duration = pulseIn(echoPin, HIGH);
+    
+    //Calculate the distance (in cm) based on the speed of sound.
+    distance = duration/58.2;
+    
+    if (distance >= maximumRange || distance <= minimumRange) { //if the range is out of the bounds
+        /*
+         * This shouldn't do anything. Just log some error (or light a LED).
+         */
+        Serial.println("-1");
+        digitalWrite(LEDPin, HIGH);
+    } else { //if the range is within the defined bounds
+        /* Send the distance to the computer using Serial protocol, and
+         turn LED OFF to indicate successful reading. */
+        Serial.println(distance);
+        digitalWrite(LEDPin, LOW);
+        //sending message to server to inform someone passes through the door
+        client.println("RA:00000000,isDoor:1,isPresent:0");
+
+   
+       
+    }
+    
+    //Delay 50ms before next reading.
+    delay(50);
 }
