@@ -13,6 +13,7 @@
 *.a
 *.la
 *.lo
+*.DS_Store
 
 # Shared objects (inc. Windows DLLs)
 *.dll
