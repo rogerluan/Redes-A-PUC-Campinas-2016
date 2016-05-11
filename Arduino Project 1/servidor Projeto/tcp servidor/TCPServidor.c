@@ -36,7 +36,7 @@ struct data{
     
     char alunosRA[300][9];
     int count;
-    int doorCounter
+    int doorCounter;
 };
 
 
@@ -147,7 +147,7 @@ int main()
             }
             
             
-            printf("recebi\n");
+            //printf("recebi\n");
             
             if(bufferer[19] == '0'){
                 buf.isDoor = false;
@@ -221,7 +221,6 @@ int main()
                             resp[20] = '1';
                             resp[21] = '\0';
 
-                            //comentado aguardando cliente receber
                             
                             if (send(ns, resp, strlen(resp)+1, 0) < 0)
                             {
@@ -304,7 +303,7 @@ int main()
             close(ns);
             
             /* Processo filho termina sua execuÁ„o */
-            printf("[%d] Processo filho terminado com sucesso.\n", fid);
+            //printf("[%d] Processo filho terminado com sucesso.\n", fid);
             exit(0);
         }
         else
