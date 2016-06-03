@@ -150,7 +150,7 @@ int main(int argc,char *argv[]) {
                     exit(6);
                 }
                 if (recvbuf[protocol_i] == vazio)
-                    printf("Nenhuma mensagem cadastrada para este usuário\n");
+                    printf("Nenhuma mensagem cadastrada para este usuario\n");
                 else if (recvbuf[protocol_i] == ack) {
                     l = 1;
                     int apagadas = 0;

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C5B3AA2C1D01F62300E617A7 /* WhatsAp2p Client.c in Sources */ = {isa = PBXBuildFile; fileRef = C5B3AA2B1D01F62300E617A7 /* WhatsAp2p Client.c */; };
+		C5B3AA331D01F84300E617A7 /* Atividade4-Cliente.c in Sources */ = {isa = PBXBuildFile; fileRef = C5B3AA321D01F84300E617A7 /* Atividade4-Cliente.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +25,8 @@
 
 /* Begin PBXFileReference section */
 		C5B3AA281D01F62300E617A7 /* WhatsAp2p Client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "WhatsAp2p Client"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C5B3AA2B1D01F62300E617A7 /* WhatsAp2p Client.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "WhatsAp2p Client.c"; path = "../WhatsAp2p Client.c"; sourceTree = "<group>"; };
+		C5B3AA2B1D01F62300E617A7 /* WhatsAp2p Client.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "WhatsAp2p Client.c"; sourceTree = "<group>"; };
+		C5B3AA321D01F84300E617A7 /* Atividade4-Cliente.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "Atividade4-Cliente.c"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				C5B3AA2B1D01F62300E617A7 /* WhatsAp2p Client.c */,
+				C5B3AA321D01F84300E617A7 /* Atividade4-Cliente.c */,
 			);
 			path = "WhatsAp2p Client";
 			sourceTree = "<group>";
@@ -119,6 +122,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C5B3AA2C1D01F62300E617A7 /* WhatsAp2p Client.c in Sources */,
+				C5B3AA331D01F84300E617A7 /* Atividade4-Cliente.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
