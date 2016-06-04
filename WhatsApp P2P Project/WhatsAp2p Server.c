@@ -256,7 +256,8 @@ void clearClient(Client *client)
 
 void disconnectClient(Client *client)
 {
-	//closesocket (client->socket)
+	shutdown(client->socket);
+	close(client->socket);
 	free(client->phone);
 	free(client->listenIpAddress);
 	client->socket = -1;
@@ -316,8 +317,8 @@ void *handle_client(void *threadClientIdarg) {
 					}
 				}
 				clearBuffer(buffer);
-				writeByte();//MESSAGE ID
-				writeInt(onlineUsers);
+				writeByte(0,buffer);//MESSAGE ID
+				writeInt(onlineUsers,buffer);
 				for(i=0;i<MAX_ONLINE_USERS; i++)
 				{
 					if (onlineClients[i].active==1)
@@ -347,7 +348,7 @@ void *handle_client(void *threadClientIdarg) {
             case disconnectionRequest: 
 			{
                 printf("Thread[%u]: Cliente da porta %d deseja se desconectar.\n", (unsigned)tid, ntohs(client.sin_port));
-                connected = 0;
+                disconnectClient(&onlineClients[threadClientId])
                 break;
             }
             default: 
