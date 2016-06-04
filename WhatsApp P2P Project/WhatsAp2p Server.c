@@ -30,10 +30,11 @@
 #define TAM_BUF 400 //to-do
 #define TAM 8195
 #define PORT_SIZE 5
-#define PHONE_SIZE 11 
+#define PHONE_SIZE 11
 #define IP_SIZE 15
 #define PROTOCOL_INDEX 0
 #define MAX_ONLINE_USERS 256
+#define MAXBUFF 2000 //to-do: maybe this needs adjusting
 #define BUFFMARGIN 40
 
 pthread_t thread_id;
@@ -44,9 +45,9 @@ enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
 /////////// - Structures
 struct SocketBuffer
 {
-  char *buffer;
-  int pos;
-  int size;
+    char *buffer;
+    int pos;
+    int size;
 };
 
 
@@ -57,9 +58,9 @@ struct Client {
     char *listenIpAddress;
     unsigned short listenPort;
     char *phone;
-	struct SocketBuffer buffer;
-	int active;
-	int readyForCommunication;
+    struct SocketBuffer buffer;
+    int active;
+    int readyForCommunication;
 };
 
 struct Client onlineClients[MAX_ONLINE_USERS];
@@ -68,203 +69,211 @@ struct Client onlineClients[MAX_ONLINE_USERS];
 /////////// - Read & Write Methods
 
 
-void *buffRead(int size,struct SocketBuffer *buff)
+void *buffRead(int size, struct SocketBuffer *buff)
 {
-  void *ptr;
-  ptr = &buff->buffer[buff->pos];
-  buff->pos+=size;
-  if (buff->pos > buff->size-1)
-	  buff->pos = buff->size-1;
-  return ptr;
+    void *ptr;
+    ptr = &buff->buffer[buff->pos];
+    buff->pos+=size;
+    if (buff->pos > buff->size-1)
+        buff->pos = buff->size-1;
+    return ptr;
 }
 
-void buffWrite(void *ptr, int size,struct SocketBuffer *buff)
+void buffWrite(void *ptr, int size, struct SocketBuffer *buff)
 {
-  char *oldbuff;
-  //Aloc the necessary amount of memory + margin
-  if (buff->pos+size > buff->size)
-  {
-	  oldbuff = buff->buffer;
-	  buff->buffer = (char*) malloc (buff->pos + size + BUFFMARGIN);
-	  memcpy(buff->buffer,oldbuff,buff->size);
-	  free(oldbuff);
-	  buff->size = buff->pos + size + BUFFMARGIN;  
-  }
-  memcpy(&buff->buffer[buff->pos],ptr,size);
-  buff->pos+=size;
+    char *oldbuff;
+    //Aloc the necessary amount of memory + margin
+    if (buff->pos+size > buff->size)
+    {
+        oldbuff = buff->buffer;
+        buff->buffer = (char*) malloc (buff->pos + size + BUFFMARGIN);
+        memcpy(buff->buffer, oldbuff, buff->size);
+        free(oldbuff);
+        buff->size = buff->pos + size + BUFFMARGIN;
+    }
+    memcpy(&buff->buffer[buff->pos], ptr, size);
+    buff->pos+=size;
 }
 
 unsigned char readByte(struct SocketBuffer *buff)
 {
-  return (*(unsigned char*)buffRead(sizeof(char),buff));
+    return (*(unsigned char*)buffRead(sizeof(char), buff));
 }
 
 int readInt(struct SocketBuffer *buff)
 {
-  return (*(int*)buffRead(sizeof(int),buff));
+    return (*(int*)buffRead(sizeof(int), buff));
+}
+
+int readShort(struct SocketBuffer *buff)
+{
+    return (*(short*)buffRead(sizeof(short), buff));
 }
 
 double readDouble(struct SocketBuffer *buff)
 {
-  return (*(double*)buffRead(sizeof(double),buff));
+    return (*(double*)buffRead(sizeof(double), buff));
 }
 
 char *readString(struct SocketBuffer *buff)
 {
-  char now;
-  int initialPos=buff->pos;
-  int size;
-  char *retval;
-  
-  now = buff->buffer[buff->pos];
-  while(now != '\0' && buff->pos < buff->size)
-  {
-    buff->pos++;
+    char now;
+    int initialPos=buff->pos;
+    int size;
+    char *retval;
+    
     now = buff->buffer[buff->pos];
-  }
-  
-  size = buff->pos-initialPos;
-  retval = (char*)malloc(size);
-  memcpy(retval,&buff->buffer[initialPos],size);
-  buff->pos++;
-  return retval;
+    while(now != '\0' && buff->pos < buff->size)
+    {
+        buff->pos++;
+        now = buff->buffer[buff->pos];
+    }
+    
+    size = buff->pos-initialPos;
+    retval = (char*)malloc(size);
+    memcpy(retval, &buff->buffer[initialPos], size);
+    buff->pos++;
+    return retval;
 }
 
-void writeInt(int value,struct SocketBuffer *buff)
+void writeInt(int value, struct SocketBuffer *buff)
 {
-  buffWrite(&value, 4,buff);
+    buffWrite(&value, sizeof(int), buff);
 }
 
-void writeDouble(double value,struct SocketBuffer *buff)
+void writeShort(short value, struct SocketBuffer *buff)
 {
-  buffWrite(&value, sizeof(double),buff);
+    buffWrite(&value, sizeof(short), buff);
+}
+
+void writeDouble(double value, struct SocketBuffer *buff)
+{
+    buffWrite(&value, sizeof(double), buff);
 }
 
 void writeByte(unsigned char byte, struct SocketBuffer *buff)
 {
-  buffWrite(&byte, sizeof(unsigned char),buff);
+    buffWrite(&byte, sizeof(unsigned char), buff);
 }
 
 void writeString(char *string, struct SocketBuffer *buff)
 {
-  int size = 0;
-  int strChar = string[0];
-  while(strChar!='\0' && size<MAXBUFF)
-  {
+    int size = 0;
+    int strChar = string[0];
+    while(strChar!='\0' && size<MAXBUFF)
+    {
+        size++;
+        strChar = string[size];
+    }
     size++;
-    strChar = string[size];
-  }
-  size++;
-  
-  buffWrite(string, size,buff);
+    
+    buffWrite(string, size, buff);
 }
 
 void clearBuffer(struct SocketBuffer *buff)
 {
-  buff->pos = 0;
+    buff->pos = 0;
 }
 void startBuffer(struct SocketBuffer *buff)
 {
-  buff->size = 0;
+    buff->size = 0;
 }
 
 //@ns = socket descriptor
-void sendResp(struct SocketBuffer *buff, int ns) 
+void sendResp(struct SocketBuffer *buff, int ns)
 {
-  int totalToSend, totalSent,sentBytes;
-  struct SocketBuffer sendBuff;
-  
-  startBuffer(&sendBuff);
-  clearBuffer(&sendBuff);
-  writeInt(buff->pos,&sendBuff);
-  buffWrite((void*)buff->buffer,buff->pos,&sendBuff);
-  
-  totalToSend = sendBuff.pos;
-  totalSent = 0;
-  
-  while(totalSent < totalToSend)
-  {
-    sentBytes = send(ns, sendBuff.buffer + totalSent,(totalToSend-totalSent), 0);
-    if (sentBytes < 0)
-    {
-        perror("Send()");
-	return; 
-    }
-    totalSent += sentBytes;
-  }
-}
-
-//@ns = socket descriptor
-void recvResp(struct SocketBuffer *buff, int ns) 
-{
-  int bytesToReceive = 0;
-  int bytesReceived, totalBytesReceived=0;
-  int sizeToReceive = 0;
-  clearBuffer(buff);
-  
-  sizeToReceive = sizeof(int);
-  
-  //recebe tamanho do pacote
-  while (totalBytesReceived < sizeToReceive)
-  {
-    bytesReceived = recv(ns, &bytesToReceive + totalBytesReceived, sizeToReceive - totalBytesReceived, 0);
+    ssize_t totalToSend, totalSent, sentBytes;
+    struct SocketBuffer sendBuff;
     
-    if (bytesReceived  == -1) 
+    startBuffer(&sendBuff);
+    clearBuffer(&sendBuff);
+    writeInt(buff->pos, &sendBuff);
+    buffWrite((void*)buff->buffer, buff->pos, &sendBuff);
+    
+    totalToSend = sendBuff.pos;
+    totalSent = 0;
+    
+    while(totalSent < totalToSend)
     {
-	perror("Recv()");
-	exit(6);
+        sentBytes = send(ns, sendBuff.buffer + totalSent, (totalToSend-totalSent), 0);
+        if (sentBytes < 0)
+        {
+            perror("Send()");
+            return;
+        }
+        totalSent += sentBytes;
     }
-    totalBytesReceived += bytesReceived;
-  }
-  
-  //Aloca quantidade de espaco necessaria + margem (pra evitar call pro malloc o tempo todo)
-  if (buff->pos+bytesToReceive > buff->size)
-  {
-	  oldbuff = buff->buffer;
-	  buff->buffer = (char*) malloc (buff->pos + bytesToReceive + BUFFMARGIN);
-	  memcpy(buff->buffer,oldbuff,buff->size);
-	  free(oldbuff);
-	  buff->size = buff->pos + bytesToReceive + BUFFMARGIN;  
-  }
-  
-  //recebe pacote
-  totalBytesReceived = 0;
-  bytesReceived = 0;
-  while (bytesReceived < bytesToReceive)
-  {
-    bytesReceived = recv(ns, buff->buffer + totalBytesReceived,bytesToReceive - totalBytesReceived, 0);
-    if (bytesReceived  == -1) 
+}
+
+//@ns = socket descriptor
+void recvResp(struct SocketBuffer *buff, int ns)
+{
+    ssize_t bytesToReceive = 0, bytesReceived, totalBytesReceived = 0, sizeToReceive = 0;
+    clearBuffer(buff);
+    
+    sizeToReceive = sizeof(int);
+    
+    //recebe tamanho do pacote
+    while (totalBytesReceived < sizeToReceive)
     {
-      perror("Recv()");
-      exit(6);
+        bytesReceived = recv(ns, &bytesToReceive + totalBytesReceived, sizeToReceive - totalBytesReceived, 0);
+        
+        if (bytesReceived  == -1)
+        {
+            perror("Recv()");
+            exit(6);
+        }
+        totalBytesReceived += bytesReceived;
     }
-    totalBytesReceived += bytesReceived;
-  }
+    
+    //Aloca quantidade de espaco necessaria + margem (pra evitar call pro malloc o tempo todo)
+    if (buff->pos+bytesToReceive > buff->size)
+    {
+        oldbuff = buff->buffer;
+        buff->buffer = (char*) malloc (buff->pos + bytesToReceive + BUFFMARGIN);
+        memcpy(buff->buffer, oldbuff, buff->size);
+        free(oldbuff);
+        buff->size = buff->pos + bytesToReceive + BUFFMARGIN;
+    }
+    
+    //recebe pacote
+    totalBytesReceived = 0;
+    bytesReceived = 0;
+    while (bytesReceived < bytesToReceive)
+    {
+        bytesReceived = recv(ns, buff->buffer + totalBytesReceived, bytesToReceive - totalBytesReceived, 0);
+        if (bytesReceived  == -1)
+        {
+            perror("Recv()");
+            exit(6);
+        }
+        totalBytesReceived += bytesReceived;
+    }
 }
 
 
 void clearClient(Client *client)
 {
     client->socket = -1;
-    client->port = -1;
-	startBuffer(&(client->buffer));
-	clearBuffer(&(client->buffer));
-	client->active=0;
-	client->readyForCommunication = 0;
+    client->listenPort = -1;
+    startBuffer(&(client->buffer));
+    clearBuffer(&(client->buffer));
+    client->active=0;
+    client->readyForCommunication = 0;
 }
 
 void disconnectClient(Client *client)
 {
-	shutdown(client->socket);
-	close(client->socket);
-	free(client->phone);
-	free(client->listenIpAddress);
-	client->socket = -1;
-    client->port = -1;
-	startBuffer(&(client->buffer));
-	clearBuffer(&(client->buffer));
-	client->active=0;
-	client->readyForCommunication = 0;
+//    shutdown(client->socket);
+    close(client->socket);
+    free(client->phone);
+    free(client->listenIpAddress);
+    client->socket = -1;
+    client->listenPort = -1;
+    startBuffer(&(client->buffer));
+    clearBuffer(&(client->buffer));
+    client->active=0;
+    client->readyForCommunication = 0;
 }
 /////////// - Other Functions
 
@@ -276,9 +285,9 @@ void disconnectClient(Client *client)
  */
 void *handle_client(void *threadClientIdarg) {
     
-	int threadClientId = *threadClientIdarg;
-	free(threadClientIdarg);
-	
+    int threadClientId = *threadClientIdarg;
+    free(threadClientIdarg);
+    
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
     int l, connected = 1;
@@ -289,72 +298,72 @@ void *handle_client(void *threadClientIdarg) {
     struct in_addr sourceIP = onlineClients[threadClientId].client.sin_addr; //source IP address
     clientSocket = onlineClients[threadClientId].socket;
     struct sockaddr_in client = onlineClients[threadClientId].client;
-	struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
-	
-	int messageid;
-	int i=0;
+    struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
+    
+    int messageid;
+    int i=0;
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
-	
+    
     while (connected) {
         printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
         
-		recvResp(buffer,onlineClients[threadClientId].socket);
+        recvResp(buffer, onlineClients[threadClientId].socket);
         
-		messageid = readByte(buffer);
-		
-        switch (messageid) 
-		{
-            case infoRequest: 
-			{
+        messageid = readByte(buffer);
+        
+        switch (messageid)
+        {
+            case infoRequest:
+            {
                 printf("Thread[%u]: Cliente da porta %d deseja obter informações sobre todos usuários.\n", (unsigned)tid, ntohs(client.sin_port));
-				int onlineUsers=0;
+                int onlineUsers=0;
                 for(i=0;i<MAX_ONLINE_USERS; i++)
-				{
-					if (onlineClients[i].active==1)
-					{
-						onlineUsers++;
-					}
-				}
-				clearBuffer(buffer);
-				writeByte(0,buffer);//MESSAGE ID
-				writeInt(onlineUsers,buffer);
-				for(i=0;i<MAX_ONLINE_USERS; i++)
-				{
-					if (onlineClients[i].active==1)
-					{
-						writeString(onlineClients[i].phone, buffer);
-						writeString(onlineClients[i].listenIpAddress, buffer);
-						writeShort(onlineClients[i].listenPort buffer);
-					}
-				}
-				sendResp(buffer,clientSocket);
-				
+                {
+                    if (onlineClients[i].active==1)
+                    {
+                        onlineUsers++;
+                    }
+                }
+                clearBuffer(buffer);
+                writeByte(0, buffer);//MESSAGE ID
+                writeInt(onlineUsers, buffer);
+                for(i=0;i<MAX_ONLINE_USERS; i++)
+                {
+                    if (onlineClients[i].active==1)
+                    {
+                        writeString(onlineClients[i].phone, buffer);
+                        writeString(onlineClients[i].listenIpAddress, buffer);
+                        writeShort(onlineClients[i].listenPort, buffer);
+                    }
+                }
+                sendResp(buffer, clientSocket);
+                
                 break;
             }
-            case connectionRequest: 
-			{
+            case connectionRequest:
+            {
                 printf("Thread[%u]: Cliente da porta %d deseja se conectar.\n", (unsigned)tid, ntohs(client.sin_port));
                 
                 onlineClients[threadClientId].phone = readString(buffer);
-				onlineClients[threadClientId].listenIpAddress = readString(buffer);
-				onlineClients[threadClientId].listenPort = readShort(buffer);
-				onlineClients[threadClientId].readyForCommunication = 1;
-				
-				printf("O celular que esta se conectando eh: %s",onlineClients[threadClientId].phone);
-				
+                onlineClients[threadClientId].listenIpAddress = readString(buffer);
+                onlineClients[threadClientId].listenPort = readShort(buffer);
+                onlineClients[threadClientId].readyForCommunication = 1;
+                
+                printf("O celular que esta se conectando eh: %s", onlineClients[threadClientId].phone);
+                
                 break;
             }
-            case disconnectionRequest: 
-			{
+            case disconnectionRequest:
+            {
                 printf("Thread[%u]: Cliente da porta %d deseja se desconectar.\n", (unsigned)tid, ntohs(client.sin_port));
                 disconnectClient(&onlineClients[threadClientId])
                 break;
             }
-            default: 
-			{
+            default:
+            {
                 printf("Thread[%u]: Comando de código %d desconhecido. Enviando resposta ao cliente da porta %d\n", (unsigned)tid, recvbuf[PROTOCOL_INDEX], ntohs(client.sin_port));
                 //to-do: implementar este método
-//                sendResp(sendbuf, clientSocket, invalido);
+                //                sendResp(sendbuf, clientSocket, invalido);
                 break;
             }
         }
@@ -429,46 +438,45 @@ int main(int argc, const char * argv[]) {
      * ocorrerá a comunicação com o cliente.
      */
     namelen = sizeof(client);
-	
-	int nextClientId = -1;
+    
+    int nextClientId = -1;
     int i=0;
-	
-	for(i=0;i<MAX_ONLINE_USERS; i++)
-	{
-		clearClient(&onlineClients[i]);
-	}
-	
-    while (1) 
-	{
-		
+    
+    for(i=0;i<MAX_ONLINE_USERS; i++)
+    {
+        clearClient(&onlineClients[i]);
+    }
+    
+    while (1)
+    {
+        
         printf("Servidor pronto e aguardando novo cliente\n");
-		for(i=0;i<MAX_ONLINE_USERS; i++)
-		{
-			if (onlineClients[i].active==0)
-			{
-				nextClientid=i;	
-				break;
-			}
-		}
-		
-		clearClient(&onlineClients[nextClientid]);
-
-        if ((onlineClients[nextClientid].socket = accept(s, (struct sockaddr *)&(onlineClients[nextClientid].client), &namelen)) == -1) 
-		{
+        for(i=0;i<MAX_ONLINE_USERS; i++)
+        {
+            if (onlineClients[i].active==0)
+            {
+                nextClientId=i;
+                break;
+            }
+        }
+        
+        clearClient(&onlineClients[nextClientId]);
+        
+        if ((onlineClients[nextClientId].socket = accept(s, (struct sockaddr *)&(onlineClients[nextClientId].client), &namelen)) == -1)
+        {
             perror("Accept()");
             exit(5);
         }
-		
-		onlineClients[nextClientid].active = 1;
-		int *threadClientId = (int*) malloc (sizeof(int));
-		(*threadClientId) = nextClientid;
         
-        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(onlineClients[nextClientid].client.sin_port), onlineClients[nextClientid].socket);
-      
+        onlineClients[nextClientId].active = 1;
+        int *threadClientId = (int*) malloc (sizeof(int));
+        (*threadClientId) = nextClientId;
+        
+        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(onlineClients[nextClientId].client.sin_port), onlineClients[nextClientId].socket);
+        
         pthread_create(&thread_id, NULL, handle_client, (void *)threadClientId); //cria a thread
-		
-		nextClientid = -1;
         
+        nextClientId = -1;
         
         if ((int *)thread_id > 0)  {
             printf("Thread filha criada: %u\n", (unsigned) thread_id);
@@ -479,5 +487,5 @@ int main(int argc, const char * argv[]) {
         }
     }
     
-
+    
 }
