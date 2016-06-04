@@ -27,11 +27,12 @@
 
 /////////// - Global Variables
 
-#define TAM_BUF 400 //to-do:
+#define TAM_BUF 400 //to-do
 #define TAM 8195
 #define PORT_SIZE 5
 #define PHONE_SIZE 11
-#define protocol_index 0
+#define PROTOCOL_INDEX 0
+#define MAX_ONLINE_USERS 256
 pthread_t thread_id;
 pthread_mutex_t mutex;
 
@@ -40,17 +41,16 @@ enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
 
 /////////// - Structures
 
-typedef struct {
-    struct sockaddr_in cli;
-    //pthread_t tid;
-    int s; /* Socket conectado ao cliente        */
-} ClientParam;
-
-typedef struct {
+typedef struct Client Client;
+struct Client {
+    struct sockaddr_in client;
+    int socket; //socket connected to the client
     struct in_addr ip_address;
     unsigned short port;
     char phone[PHONE_SIZE];
-} Client;
+};
+
+struct Client onlineClients[MAX_ONLINE_USERS];
 
 struct udpBuffer {
     char buffer[TAM];
@@ -295,26 +295,24 @@ char *clientToString (Client *client) {
  *  Method to be executed every time a new thread is created. A new thread is
  *  being created every time a new client requests for a connection.
  *
- *  @param client_connection Client connection pointer of type ClientParam.
+ *  @param client_connection Client connection pointer of type Client.
  */
 void *handle_client(void *client_connection) {
     
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
-    int l;
-    char sendbuf[TAM_BUF], recvbuf[TAM_BUF], phone[PHONE_SIZE];
-    int i=0, j=0, tid;
+    int l, connected = 1;
+    char recvbuf[TAM_BUF];
+    pthread_t tid = pthread_self();
     
-    int bytesRead, connected = 1;
+    ssize_t bytesRead;
     
-    ClientParam *par = (ClientParam *)(client_connection);
-    unsigned short sourcePort = par->cli.sin_port; //source port
-    struct in_addr sourceIP = par->cli.sin_addr.s_addr; //source IP address
-    clientSocket = par->s;
+    Client *connectedClient = (Client *)(client_connection);
+//    unsigned short sourcePort = connectedClient->client.sin_port; //source port
+    struct in_addr sourceIP = connectedClient->client.sin_addr; //source IP address
+    clientSocket = connectedClient->socket;
     
-    //tid = par->tid;
-    tid = pthread_self();
-    struct sockaddr_in client = par->cli;
+    struct sockaddr_in client = connectedClient->client;
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     while (connected) {
         printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
@@ -323,7 +321,7 @@ void *handle_client(void *client_connection) {
             continue;
         }
         
-        switch (recvbuf[protocol_index]) {
+        switch (recvbuf[PROTOCOL_INDEX]) {
             case infoRequest: {
                 printf("Thread[%u]: Cliente da porta %d deseja obter informações sobre outro usuário.\n", (unsigned)tid, ntohs(client.sin_port));
                 //to-do: implementar este método
@@ -336,9 +334,9 @@ void *handle_client(void *client_connection) {
                 
                 //to-do: método incompleto (não consegui terminar ainda - fique à vontade :P)
                 
-                Client *client = (Client *)malloc(sizeof(Client));
-                memcpy(&client->ip_address, sourceIP, sizeof(sourceIP));
-                strcmp(client->phone, recvbuf+l);
+//                Client *client = (Client *)malloc(sizeof(Client));
+                memcpy(&connectedClient->ip_address, &sourceIP, sizeof(sourceIP));
+                strcmp(connectedClient->phone, recvbuf+l);
                 
                 do {
 //                    printf("%-10s |  ",recvbuf+l);
@@ -346,7 +344,7 @@ void *handle_client(void *client_connection) {
                     l = getNextString(recvbuf, l);
                     if (l == -1) break;
                     printf("O cliente estarah ouvindo na porta: %s.\n",recvbuf+l);
-//                    memcpy(client->port, recvbuf+l, sizeof(recvbuf+l));
+//                    memcpy(&client->port, recvbuf+l, sizeof(recvbuf+l));
                     l = getNextString(recvbuf,l);
                 } while (l != -1);
                 break;
@@ -357,7 +355,7 @@ void *handle_client(void *client_connection) {
                 break;
             }
             default: {
-                printf("Thread[%u]: Comando de código %d desconhecido. Enviando resposta ao cliente da porta %d\n", (unsigned)tid, recvbuf[protocol_index], ntohs(client.sin_port));
+                printf("Thread[%u]: Comando de código %d desconhecido. Enviando resposta ao cliente da porta %d\n", (unsigned)tid, recvbuf[PROTOCOL_INDEX], ntohs(client.sin_port));
                 //to-do: implementar este método
 //                sendResp(sendbuf, clientSocket, invalido);
                 break;
@@ -437,15 +435,15 @@ int main(int argc, const char * argv[]) {
     
     while (1) {
         printf("Servidor pronto e aguardando novo cliente\n");
-        ClientParam *p = (ClientParam *)malloc(sizeof(ClientParam));
-        if ((p->s = accept(s, (struct sockaddr *)&p->cli, &namelen)) == -1) {
+        Client *incomingClient = (Client *)malloc(sizeof(Client));
+        if ((incomingClient->socket = accept(s, (struct sockaddr *)&incomingClient->client, &namelen)) == -1) {
             perror("Accept()");
             exit(5);
         }
         
-        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(p->cli.sin_port), p->s);
+        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(incomingClient->client.sin_port), incomingClient->socket);
         
-        pthread_create(&thread_id, NULL, handle_client, (void *)p); //cria a thread
+        pthread_create(&thread_id, NULL, handle_client, (void *)incomingClient); //cria a thread
         
         /**
          *  @author Roger Oba
@@ -471,6 +469,6 @@ int main(int argc, const char * argv[]) {
     }
     
     //isso nunca é executado
-    printf("Servidor terminou com sucesso.\n");
-    exit(0);
+//    printf("Servidor terminou com sucesso.\n");
+//    exit(0);
 }

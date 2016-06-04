@@ -43,6 +43,8 @@ int readString(char buffer[TAM_BUF], int bufferPosition, int maxLength) {
     return bufferPosition;
 }
 
+
+
 #pragma mark - Main
 
 int main(int argc, const char * argv[]) {
