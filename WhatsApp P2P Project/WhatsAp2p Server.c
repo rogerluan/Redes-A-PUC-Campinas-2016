@@ -38,7 +38,6 @@ pthread_mutex_t mutex;
 
 enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
 
-
 /////////// - Structures
 
 typedef struct Client Client;

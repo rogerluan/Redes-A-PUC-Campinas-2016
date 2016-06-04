@@ -24,7 +24,7 @@
 
 /* Begin PBXFileReference section */
 		C5B3AA151D01F61700E617A7 /* WhatsAp2p Server */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "WhatsAp2p Server"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C5B3AA181D01F61700E617A7 /* WhatsAp2p Server.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = "WhatsAp2p Server.c"; path = "../WhatsAp2p Server.c"; sourceTree = "<group>"; };
+		C5B3AA181D01F61700E617A7 /* WhatsAp2p Server.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = "WhatsAp2p Server.c"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
