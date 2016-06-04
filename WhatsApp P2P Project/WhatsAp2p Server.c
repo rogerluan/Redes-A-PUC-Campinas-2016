@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include <sys/ipc.h>            /* for all IPC function calls */
 #include <sys/shm.h>            /* for shmget(), shmat(), shmctl() */
@@ -26,6 +27,7 @@
 #pragma mark - Global Variables
 
 #define TAM_BUF 400 //to-do:
+#define TAM 8195
 #define PHONE_DIGITS 11
 #define protocol_index 0
 pthread_t thread_id;
@@ -48,21 +50,12 @@ typedef struct {
     char phone[PHONE_DIGITS];
 } Client;
 
-#pragma mark - Read & Write Functions
+struct udpBuffer {
+    char buffer[TAM];
+    int pos;
+};
 
-/**
- *  Searches for the next string in a given buffer.
- *
- *  @param buffer   Buffer in which the search is going to be performed on.
- *  @param position Initial position of the buffer where the search begins.
- *
- *  @return Returns the buffer position where the next string is. If there are no more strings in the buffer, returns -1.
- */
-int getNextString(char buffer[TAM_BUF], int position) {
-    while (buffer[position++] != '\0');
-    if (buffer[position] == '#') return -1;
-    return position;
-}
+#pragma mark - Data Persistence
 
 /**
  *  Fetches a client by a given phone number.
@@ -80,9 +73,9 @@ Client getClientByPhone(char phone[PHONE_DIGITS]) {
     Client *client = (Client *)malloc(sizeof(Client));
 //    client->ip_address = etc;
 //    client->port = etc;
-    client->phone = phone;
+    strcmp(client->phone, phone);
     
-    return client;
+    return *client;
 }
 
 /**
@@ -93,7 +86,6 @@ Client getClientByPhone(char phone[PHONE_DIGITS]) {
  *  @return Returns 1 if operation succeeds, otherwise 0.
  */
 bool saveClient(Client *client) {
-    
     bool operationSucceed = 1;
     
     //fwrite method to save the client;
@@ -104,6 +96,104 @@ bool saveClient(Client *client) {
     return operationSucceed;
 }
 
+/**
+ *  Deletes a client's information from clients database file.
+ *
+ *  @param client Client that is going to be deleted.
+ *
+ *  @return Returns 1 if operation succeeds, otherwise 0.
+ */
+bool deleteClient(Client *client) {
+    bool operationSucceed = 1;
+    
+    //fwrite method to delete the client;
+    
+    if (error) {
+        return !operationSucceed;
+    }
+    return operationSucceed;
+}
+
+#pragma mark - Read & Write Methods
+
+int readInt(struct udpBuffer *buff) {
+    int returnValue = (*(int *)(&buff->buffer[buff->pos]));
+    buff->pos+=4;
+    return returnValue;
+}
+
+unsigned char readByte(struct udpBuffer *buff) {
+    unsigned char returnValue = buff->buffer[buff->pos];
+    buff->pos++;
+    return returnValue;
+}
+
+char *readString(struct udpBuffer *buff) {
+    char now;
+    int initialPos = buff->pos;
+    int size;
+    char *returnValue;
+    
+    now = buff->buffer[buff->pos];
+    while(now != '\0' && buff->pos < 8195) {
+        buff->pos++;
+        now = buff->buffer[buff->pos];
+    }
+    
+    size = buff->pos-initialPos;
+    returnValue = (char *)malloc(size);
+    memcpy(returnValue, &buff->buffer[initialPos], size);
+    buff->pos++;
+    return returnValue;
+}
+
+void buffWrite(void *ptr, int size, struct udpBuffer *buff) {
+    memcpy(&buff->buffer[buff->pos], ptr, size);
+    buff->pos+=size;
+}
+
+void writeInt(int value, struct udpBuffer *buff) {
+    buffWrite(&value, 4, buff);
+}
+
+void writeByte(unsigned char byte, struct udpBuffer *buff) {
+    buff->buffer[buff->pos] = byte;
+    //memcpy(&buff->buffer[buff->pos],&byte,1);
+    buff->pos++;
+}
+
+void writeString(char *string, struct udpBuffer *buff) {
+    int size = 0;
+    int strChar = string[0];
+    while (strChar!='\0' && size<1000) {
+        size++;
+        strChar = string[size];
+    }
+    size++;
+    
+    memcpy(&buff->buffer[buff->pos],string,size);
+    buff->pos+=size;
+}
+
+#pragma mark - Helper Methods
+
+void clearBuffer(struct udpBuffer *buff) {
+    buff->pos = 0;
+}
+
+/**
+ *  Searches for the next string in a given buffer.
+ *
+ *  @param buffer   Buffer in which the search is going to be performed on.
+ *  @param position Initial position of the buffer where the search begins.
+ *
+ *  @return Returns the buffer position where the next string is. If there are no more strings in the buffer, returns -1.
+ */
+int getNextString(char buffer[TAM_BUF], int position) {
+    while (buffer[position++] != '\0');
+    if (buffer[position] == '#') return -1;
+    return position;
+}
 
 #pragma mark - Other Functions
 
@@ -126,8 +216,8 @@ void *handle_client(void *client_connection) {
     int bytesRead, connected = 1;
     
     ClientParam *par = (ClientParam *)(client_connection);
-    par->cli.sin_port //source port
-    par->cli.sin_addr.s_addr //source IP address
+    unsigned short sourcePort = par->cli.sin_port; //source port
+    in_addr_t sourceIP = par->cli.sin_addr.s_addr; //source IP address
     clientSocket = par->s;
     
     //tid = par->tid;
@@ -154,15 +244,19 @@ void *handle_client(void *client_connection) {
                 
                 //to-do: método incompleto (não consegui terminar ainda - fique à vontade :P)
                 
+                Client *client = (Client *)malloc(sizeof(Client));
+                memcpy(client->ip_address, sourceIP, sizeof(sourceIP));
+                strcmp(client->phone, recvbuf+l);
+                
                 do {
 //                    printf("%-10s |  ",recvbuf+l);
-                    printf("%s",recvbuf+l);
+                    printf("%s\n",recvbuf+l);
                     l = getNextString(recvbuf, l);
                     if (l == -1) break;
-                    printf("Mensagem: %s.\n",recvbuf+l);
+                    printf("O cliente estarah ouvindo na porta: %s.\n",recvbuf+l);
+//                    memcpy(client->port, recvbuf+l, sizeof(recvbuf+l));
                     l = getNextString(recvbuf,l);
                 } while (l != -1);
-                
                 break;
             }
             case disconnectionRequest: {
@@ -180,9 +274,6 @@ void *handle_client(void *client_connection) {
     }
     pthread_exit(0);
 }
-
-
-
 
 #pragma mark - Main
 
@@ -244,7 +335,7 @@ int main(int argc, const char * argv[]) {
         perror("Listen()");
         exit(4);
     }
-    printf("listen ok. Chamando accept\n");
+    printf("Listen ok. Chamando accept\n");
     
     /*
      * Aceita uma conexão e cria um novo socket através do qual
