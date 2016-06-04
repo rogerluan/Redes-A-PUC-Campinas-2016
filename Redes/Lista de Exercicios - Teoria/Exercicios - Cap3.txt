@@ -1,8 +1,0 @@
-﻿Listas: Exercícios (Entrega: 25/Out)
-Livro: Kurose, J. F.; Ross, K. W.; Redes de Computadores e a Internet. 3ª Edição. Pearson Education, 2005.
-
-Exercícios Cap. 3:
-Questões de revisão: 1 a 8.
-Problemas: 1 a 7, 10, 11, 12, 16 a 20, 22 a 25, 27 e 28.
-
-Orientações: A lista com os exercícios resolvidos deve ser entregue manuscrita individualmente no dia 25/Out no horário da aula.
