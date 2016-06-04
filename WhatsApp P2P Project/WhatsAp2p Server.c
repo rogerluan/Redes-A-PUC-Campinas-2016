@@ -14,6 +14,7 @@
 #include <string.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <arpa/inet.h>
 
 #include <sys/ipc.h>            /* for all IPC function calls */
 #include <sys/shm.h>            /* for shmget(), shmat(), shmctl() */
@@ -24,11 +25,12 @@
 #include <pthread.h>
 
 
-#pragma mark - Global Variables
+/////////// - Global Variables
 
 #define TAM_BUF 400 //to-do:
 #define TAM 8195
-#define PHONE_DIGITS 11
+#define PORT_SIZE 5
+#define PHONE_SIZE 11
 #define protocol_index 0
 pthread_t thread_id;
 pthread_mutex_t mutex;
@@ -36,7 +38,7 @@ pthread_mutex_t mutex;
 enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
 
 
-#pragma mark - Structures
+/////////// - Structures
 
 typedef struct {
     struct sockaddr_in cli;
@@ -45,9 +47,9 @@ typedef struct {
 } ClientParam;
 
 typedef struct {
-    struct hostent *ip_address;
+    struct in_addr ip_address;
     unsigned short port;
-    char phone[PHONE_DIGITS];
+    char phone[PHONE_SIZE];
 } Client;
 
 struct udpBuffer {
@@ -55,7 +57,9 @@ struct udpBuffer {
     int pos;
 };
 
-#pragma mark - Data Persistence
+/////////// - Data Persistence
+
+char *clientToString (Client *client);
 
 /**
  *  Fetches a client by a given phone number.
@@ -64,7 +68,7 @@ struct udpBuffer {
  *
  *  @return Returns the client if it was found, otherwise NULL.
  */
-Client getClientByPhone(char phone[PHONE_DIGITS]) {
+Client getClientByPhone(char phone[PHONE_SIZE]) {
     
     //perform fread method to find the client;
     
@@ -79,20 +83,91 @@ Client getClientByPhone(char phone[PHONE_DIGITS]) {
 }
 
 /**
- *  Persists a client's information in file.
+ *  Assumes there isn't a client with the same phone number
+ *  in the database, and adds a new client to the end of the file.
+ *
+ *  @param client   The client that is going to be saved.
+ *  @param database Database file where the client is being saved on.
+ *
+ *  @return Returns 1 if operation succeeds, otherwise 0.
+ */
+bool addClient(Client *client, FILE *database) {
+    bool operationSucceed = 1;
+    
+    size_t clientStringSize = PHONE_SIZE+INET_ADDRSTRLEN+PORT_SIZE; //11+16+5+2 commas + \n = [35];
+    char clientString[clientStringSize];
+    
+    //to-do: fwrite at end of file;
+    
+    //to-do: adds a client;
+    
+    return operationSucceed;
+}
+
+/**
+ *  Persists a client's information in file. If it already
+ *  exists, replaces it. Otherwise, creates a new record.
  *
  *  @param client The client that is going to be saved.
  *
  *  @return Returns 1 if operation succeeds, otherwise 0.
  */
 bool saveClient(Client *client) {
-    bool operationSucceed = 1;
     
-    //fwrite method to save the client;
+    bool operationSucceed = true, triedCreating = false;
     
-    if (error) {
+    if (!client) {
         return !operationSucceed;
     }
+    
+    char phone[PHONE_SIZE];
+    int clientStringSize = PHONE_SIZE+INET_ADDRSTRLEN+PORT_SIZE; //11+16+5+2 commas + \n = [35];
+    char tempSearch[clientStringSize];
+    int line_num = 1, client_exists = 0;
+    
+    strcpy(phone, client->phone);
+    
+    FILE *database;
+    
+    do {
+        //try to open the database file
+        database = fopen("database.txt", "r+");
+        
+        if (!database) { //unsuccess case
+            // try to create the database file
+            if (!triedCreating) {
+                triedCreating = true;
+                fclose(fopen("database.txt", "w"));
+            } else {
+                printf("Error opening file.");
+                return !operationSucceed;
+            }
+        } else {
+            break; //check if this breaks from if or from loop
+            //triedCreating = false; //if it breaks only from if, uncomment this line.
+        }
+    } while (triedCreating);
+    
+    while (fgets(tempSearch, clientStringSize, database) != NULL) {
+        if ((strstr(tempSearch, phone)) != NULL) {
+            printf("Found client on database line: %d\n", line_num);
+            printf("Client information: %s\n", tempSearch);
+            client_exists++;
+        }
+        line_num++;
+    }
+    
+    if (client_exists == 0) {
+        printf("\nNo client found with the given phone number. Adding it to the database.\n");
+        return addClient(client, database);
+    } else {
+        //to-do: implement client replacement;
+    }
+    
+    if (database) {
+        fclose(database);
+    }
+
     return operationSucceed;
 }
 
@@ -108,13 +183,10 @@ bool deleteClient(Client *client) {
     
     //fwrite method to delete the client;
     
-    if (error) {
-        return !operationSucceed;
-    }
     return operationSucceed;
 }
 
-#pragma mark - Read & Write Methods
+/////////// - Read & Write Methods
 
 int readInt(struct udpBuffer *buff) {
     int returnValue = (*(int *)(&buff->buffer[buff->pos]));
@@ -175,7 +247,7 @@ void writeString(char *string, struct udpBuffer *buff) {
     buff->pos+=size;
 }
 
-#pragma mark - Helper Methods
+/////////// - Helper Methods
 
 void clearBuffer(struct udpBuffer *buff) {
     buff->pos = 0;
@@ -195,9 +267,29 @@ int getNextString(char buffer[TAM_BUF], int position) {
     return position;
 }
 
-#pragma mark - Other Functions
+/**
+ *  Transforms a client into a readable string.
+ *
+ *  @param client Client that is being read.
+ *
+ *  @return Returns a pointer to a string with readable client data.
+ */
+char *clientToString (Client *client) {
+    char phone[PHONE_SIZE], ip_address[INET_ADDRSTRLEN], port[PORT_SIZE];
+    size_t clientStringSize = PHONE_SIZE+INET_ADDRSTRLEN+PORT_SIZE; //11+16+5+2 commas + \n = [35];
+    char *clientString;
+    
+    strcpy(phone, client->phone);                                           //assigns phone
+    sprintf(port, "%05d", client->port);                                    //assigns port
+    inet_ntop(AF_INET, &(client->ip_address), ip_address, INET_ADDRSTRLEN); //assigns ip_address
+    
+    snprintf(clientString, clientStringSize, "%s,%s,%s\n", phone, ip_address, port);
+    //talvez devêssemos tratar a clientString resultante, pra se certificar de que não há lixo de memória ou algo do genero
+    
+    return clientString;
+}
 
-
+/////////// - Other Functions
 
 /**
  *  Method to be executed every time a new thread is created. A new thread is
@@ -210,14 +302,14 @@ void *handle_client(void *client_connection) {
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
     int l;
-    char sendbuf[TAM_BUF], recvbuf[TAM_BUF], phone[PHONE_DIGITS];
+    char sendbuf[TAM_BUF], recvbuf[TAM_BUF], phone[PHONE_SIZE];
     int i=0, j=0, tid;
     
     int bytesRead, connected = 1;
     
     ClientParam *par = (ClientParam *)(client_connection);
     unsigned short sourcePort = par->cli.sin_port; //source port
-    in_addr_t sourceIP = par->cli.sin_addr.s_addr; //source IP address
+    struct in_addr sourceIP = par->cli.sin_addr.s_addr; //source IP address
     clientSocket = par->s;
     
     //tid = par->tid;
@@ -245,7 +337,7 @@ void *handle_client(void *client_connection) {
                 //to-do: método incompleto (não consegui terminar ainda - fique à vontade :P)
                 
                 Client *client = (Client *)malloc(sizeof(Client));
-                memcpy(client->ip_address, sourceIP, sizeof(sourceIP));
+                memcpy(&client->ip_address, sourceIP, sizeof(sourceIP));
                 strcmp(client->phone, recvbuf+l);
                 
                 do {
@@ -275,7 +367,7 @@ void *handle_client(void *client_connection) {
     pthread_exit(0);
 }
 
-#pragma mark - Main
+/////////// - Main
 
 int main(int argc, const char * argv[]) {
     
