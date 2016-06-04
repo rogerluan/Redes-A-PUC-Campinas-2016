@@ -30,264 +30,242 @@
 #define TAM_BUF 400 //to-do
 #define TAM 8195
 #define PORT_SIZE 5
-#define PHONE_SIZE 11
+#define PHONE_SIZE 11 
+#define IP_SIZE 15
 #define PROTOCOL_INDEX 0
 #define MAX_ONLINE_USERS 256
+#define BUFFMARGIN 40
+
 pthread_t thread_id;
 pthread_mutex_t mutex;
 
 enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
 
 /////////// - Structures
+struct SocketBuffer
+{
+  char *buffer;
+  int pos;
+  int size;
+};
+
 
 typedef struct Client Client;
 struct Client {
     struct sockaddr_in client;
     int socket; //socket connected to the client
-    struct in_addr ip_address;
-    unsigned short port;
-    char phone[PHONE_SIZE];
+    char *listenIpAddress;
+    unsigned short listenPort;
+    char *phone;
+	struct SocketBuffer buffer;
+	int active;
+	int readyForCommunication;
 };
 
 struct Client onlineClients[MAX_ONLINE_USERS];
 
-struct udpBuffer {
-    char buffer[TAM];
-    int pos;
-};
-
-/////////// - Data Persistence
-
-char *clientToString (Client *client);
-
-/**
- *  Fetches a client by a given phone number.
- *
- *  @param phone Phone number of the client that is going to be fetched.
- *
- *  @return Returns the client if it was found, otherwise NULL.
- */
-Client getClientByPhone(char phone[PHONE_SIZE]) {
-    
-    //perform fread method to find the client;
-    
-    //if it finds a client, create a new client instance and returns it, else return NULL
-    
-    Client *client = (Client *)malloc(sizeof(Client));
-//    client->ip_address = etc;
-//    client->port = etc;
-    strcmp(client->phone, phone);
-    
-    return *client;
-}
-
-/**
- *  Assumes there isn't a client with the same phone number
- *  in the database, and adds a new client to the end of the file.
- *
- *  @param client   The client that is going to be saved.
- *  @param database Database file where the client is being saved on.
- *
- *  @return Returns 1 if operation succeeds, otherwise 0.
- */
-bool addClient(Client *client, FILE *database) {
-    bool operationSucceed = 1;
-    
-    size_t clientStringSize = PHONE_SIZE+INET_ADDRSTRLEN+PORT_SIZE; //11+16+5+2 commas + \n = [35];
-    char clientString[clientStringSize];
-    
-    //to-do: fwrite at end of file;
-    
-    //to-do: adds a client;
-    
-    return operationSucceed;
-}
-
-/**
- *  Persists a client's information in file. If it already
- *  exists, replaces it. Otherwise, creates a new record.
- *
- *  @param client The client that is going to be saved.
- *
- *  @return Returns 1 if operation succeeds, otherwise 0.
- */
-bool saveClient(Client *client) {
-    
-    bool operationSucceed = true, triedCreating = false;
-    
-    if (!client) {
-        return !operationSucceed;
-    }
-    
-    char phone[PHONE_SIZE];
-    int clientStringSize = PHONE_SIZE+INET_ADDRSTRLEN+PORT_SIZE; //11+16+5+2 commas + \n = [35];
-    char tempSearch[clientStringSize];
-    int line_num = 1, client_exists = 0;
-    
-    strcpy(phone, client->phone);
-    
-    FILE *database;
-    
-    do {
-        //try to open the database file
-        database = fopen("database.txt", "r+");
-        
-        if (!database) { //unsuccess case
-            // try to create the database file
-            if (!triedCreating) {
-                triedCreating = true;
-                fclose(fopen("database.txt", "w"));
-            } else {
-                printf("Error opening file.");
-                return !operationSucceed;
-            }
-        } else {
-            break; //check if this breaks from if or from loop
-            //triedCreating = false; //if it breaks only from if, uncomment this line.
-        }
-    } while (triedCreating);
-    
-    while (fgets(tempSearch, clientStringSize, database) != NULL) {
-        if ((strstr(tempSearch, phone)) != NULL) {
-            printf("Found client on database line: %d\n", line_num);
-            printf("Client information: %s\n", tempSearch);
-            client_exists++;
-        }
-        line_num++;
-    }
-    
-    if (client_exists == 0) {
-        printf("\nNo client found with the given phone number. Adding it to the database.\n");
-        return addClient(client, database);
-    } else {
-        //to-do: implement client replacement;
-    }
-    
-    if (database) {
-        fclose(database);
-    }
-
-    return operationSucceed;
-}
-
-/**
- *  Deletes a client's information from clients database file.
- *
- *  @param client Client that is going to be deleted.
- *
- *  @return Returns 1 if operation succeeds, otherwise 0.
- */
-bool deleteClient(Client *client) {
-    bool operationSucceed = 1;
-    
-    //fwrite method to delete the client;
-    
-    return operationSucceed;
-}
 
 /////////// - Read & Write Methods
 
-int readInt(struct udpBuffer *buff) {
-    int returnValue = (*(int *)(&buff->buffer[buff->pos]));
-    buff->pos+=4;
-    return returnValue;
+
+void *buffRead(int size,struct SocketBuffer *buff)
+{
+  void *ptr;
+  ptr = &buff->buffer[buff->pos];
+  buff->pos+=size;
+  if (buff->pos > buff->size-1)
+	  buff->pos = buff->size-1;
+  return ptr;
 }
 
-unsigned char readByte(struct udpBuffer *buff) {
-    unsigned char returnValue = buff->buffer[buff->pos];
+void buffWrite(void *ptr, int size,struct SocketBuffer *buff)
+{
+  char *oldbuff;
+  //Aloc the necessary amount of memory + margin
+  if (buff->pos+size > buff->size)
+  {
+	  oldbuff = buff->buffer;
+	  buff->buffer = (char*) malloc (buff->pos + size + BUFFMARGIN);
+	  memcpy(buff->buffer,oldbuff,buff->size);
+	  free(oldbuff);
+	  buff->size = buff->pos + size + BUFFMARGIN;  
+  }
+  memcpy(&buff->buffer[buff->pos],ptr,size);
+  buff->pos+=size;
+}
+
+unsigned char readByte(struct SocketBuffer *buff)
+{
+  return (*(unsigned char*)buffRead(sizeof(char),buff));
+}
+
+int readInt(struct SocketBuffer *buff)
+{
+  return (*(int*)buffRead(sizeof(int),buff));
+}
+
+double readDouble(struct SocketBuffer *buff)
+{
+  return (*(double*)buffRead(sizeof(double),buff));
+}
+
+char *readString(struct SocketBuffer *buff)
+{
+  char now;
+  int initialPos=buff->pos;
+  int size;
+  char *retval;
+  
+  now = buff->buffer[buff->pos];
+  while(now != '\0' && buff->pos < buff->size)
+  {
     buff->pos++;
-    return returnValue;
-}
-
-char *readString(struct udpBuffer *buff) {
-    char now;
-    int initialPos = buff->pos;
-    int size;
-    char *returnValue;
-    
     now = buff->buffer[buff->pos];
-    while(now != '\0' && buff->pos < 8195) {
-        buff->pos++;
-        now = buff->buffer[buff->pos];
-    }
-    
-    size = buff->pos-initialPos;
-    returnValue = (char *)malloc(size);
-    memcpy(returnValue, &buff->buffer[initialPos], size);
-    buff->pos++;
-    return returnValue;
+  }
+  
+  size = buff->pos-initialPos;
+  retval = (char*)malloc(size);
+  memcpy(retval,&buff->buffer[initialPos],size);
+  buff->pos++;
+  return retval;
 }
 
-void buffWrite(void *ptr, int size, struct udpBuffer *buff) {
-    memcpy(&buff->buffer[buff->pos], ptr, size);
-    buff->pos+=size;
+void writeInt(int value,struct SocketBuffer *buff)
+{
+  buffWrite(&value, 4,buff);
 }
 
-void writeInt(int value, struct udpBuffer *buff) {
-    buffWrite(&value, 4, buff);
+void writeDouble(double value,struct SocketBuffer *buff)
+{
+  buffWrite(&value, sizeof(double),buff);
 }
 
-void writeByte(unsigned char byte, struct udpBuffer *buff) {
-    buff->buffer[buff->pos] = byte;
-    //memcpy(&buff->buffer[buff->pos],&byte,1);
-    buff->pos++;
+void writeByte(unsigned char byte, struct SocketBuffer *buff)
+{
+  buffWrite(&byte, sizeof(unsigned char),buff);
 }
 
-void writeString(char *string, struct udpBuffer *buff) {
-    int size = 0;
-    int strChar = string[0];
-    while (strChar!='\0' && size<1000) {
-        size++;
-        strChar = string[size];
-    }
+void writeString(char *string, struct SocketBuffer *buff)
+{
+  int size = 0;
+  int strChar = string[0];
+  while(strChar!='\0' && size<MAXBUFF)
+  {
     size++;
-    
-    memcpy(&buff->buffer[buff->pos],string,size);
-    buff->pos+=size;
+    strChar = string[size];
+  }
+  size++;
+  
+  buffWrite(string, size,buff);
 }
 
-/////////// - Helper Methods
-
-void clearBuffer(struct udpBuffer *buff) {
-    buff->pos = 0;
+void clearBuffer(struct SocketBuffer *buff)
+{
+  buff->pos = 0;
+}
+void startBuffer(struct SocketBuffer *buff)
+{
+  buff->size = 0;
 }
 
-/**
- *  Searches for the next string in a given buffer.
- *
- *  @param buffer   Buffer in which the search is going to be performed on.
- *  @param position Initial position of the buffer where the search begins.
- *
- *  @return Returns the buffer position where the next string is. If there are no more strings in the buffer, returns -1.
- */
-int getNextString(char buffer[TAM_BUF], int position) {
-    while (buffer[position++] != '\0');
-    if (buffer[position] == '#') return -1;
-    return position;
+//@ns = socket descriptor
+void sendResp(struct SocketBuffer *buff, int ns) 
+{
+  int totalToSend, totalSent,sentBytes;
+  struct SocketBuffer sendBuff;
+  
+  startBuffer(&sendBuff);
+  clearBuffer(&sendBuff);
+  writeInt(buff->pos,&sendBuff);
+  buffWrite((void*)buff->buffer,buff->pos,&sendBuff);
+  
+  totalToSend = sendBuff.pos;
+  totalSent = 0;
+  
+  while(totalSent < totalToSend)
+  {
+    sentBytes = send(ns, sendBuff.buffer + totalSent,(totalToSend-totalSent), 0);
+    if (sentBytes < 0)
+    {
+        perror("Send()");
+	return; 
+    }
+    totalSent += sentBytes;
+  }
 }
 
-/**
- *  Transforms a client into a readable string.
- *
- *  @param client Client that is being read.
- *
- *  @return Returns a pointer to a string with readable client data.
- */
-char *clientToString (Client *client) {
-    char phone[PHONE_SIZE], ip_address[INET_ADDRSTRLEN], port[PORT_SIZE];
-    size_t clientStringSize = PHONE_SIZE+INET_ADDRSTRLEN+PORT_SIZE; //11+16+5+2 commas + \n = [35];
-    char *clientString;
+//@ns = socket descriptor
+void recvResp(struct SocketBuffer *buff, int ns) 
+{
+  int bytesToReceive = 0;
+  int bytesReceived, totalBytesReceived=0;
+  int sizeToReceive = 0;
+  clearBuffer(buff);
+  
+  sizeToReceive = sizeof(int);
+  
+  //recebe tamanho do pacote
+  while (totalBytesReceived < sizeToReceive)
+  {
+    bytesReceived = recv(ns, &bytesToReceive + totalBytesReceived, sizeToReceive - totalBytesReceived, 0);
     
-    strcpy(phone, client->phone);                                           //assigns phone
-    sprintf(port, "%05d", client->port);                                    //assigns port
-    inet_ntop(AF_INET, &(client->ip_address), ip_address, INET_ADDRSTRLEN); //assigns ip_address
-    
-    snprintf(clientString, clientStringSize, "%s,%s,%s\n", phone, ip_address, port);
-    //talvez devêssemos tratar a clientString resultante, pra se certificar de que não há lixo de memória ou algo do genero
-    
-    return clientString;
+    if (bytesReceived  == -1) 
+    {
+	perror("Recv()");
+	exit(6);
+    }
+    totalBytesReceived += bytesReceived;
+  }
+  
+  //Aloca quantidade de espaco necessaria + margem (pra evitar call pro malloc o tempo todo)
+  if (buff->pos+bytesToReceive > buff->size)
+  {
+	  oldbuff = buff->buffer;
+	  buff->buffer = (char*) malloc (buff->pos + bytesToReceive + BUFFMARGIN);
+	  memcpy(buff->buffer,oldbuff,buff->size);
+	  free(oldbuff);
+	  buff->size = buff->pos + bytesToReceive + BUFFMARGIN;  
+  }
+  
+  //recebe pacote
+  totalBytesReceived = 0;
+  bytesReceived = 0;
+  while (bytesReceived < bytesToReceive)
+  {
+    bytesReceived = recv(ns, buff->buffer + totalBytesReceived,bytesToReceive - totalBytesReceived, 0);
+    if (bytesReceived  == -1) 
+    {
+      perror("Recv()");
+      exit(6);
+    }
+    totalBytesReceived += bytesReceived;
+  }
 }
 
+
+void clearClient(Client *client)
+{
+    client->socket = -1;
+    client->port = -1;
+	startBuffer(&(client->buffer));
+	clearBuffer(&(client->buffer));
+	client->active=0;
+	client->readyForCommunication = 0;
+}
+
+void disconnectClient(Client *client)
+{
+	shutdown(client->socket);
+	close(client->socket);
+	free(client->phone);
+	free(client->listenIpAddress);
+	client->socket = -1;
+    client->port = -1;
+	startBuffer(&(client->buffer));
+	clearBuffer(&(client->buffer));
+	client->active=0;
+	client->readyForCommunication = 0;
+}
 /////////// - Other Functions
 
 /**
@@ -296,64 +274,84 @@ char *clientToString (Client *client) {
  *
  *  @param client_connection Client connection pointer of type Client.
  */
-void *handle_client(void *client_connection) {
+void *handle_client(void *threadClientIdarg) {
     
+	int threadClientId = *threadClientIdarg;
+	free(threadClientIdarg);
+	
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
     int l, connected = 1;
     char recvbuf[TAM_BUF];
     pthread_t tid = pthread_self();
     
-    ssize_t bytesRead;
-    
-    Client *connectedClient = (Client *)(client_connection);
-//    unsigned short sourcePort = connectedClient->client.sin_port; //source port
-    struct in_addr sourceIP = connectedClient->client.sin_addr; //source IP address
-    clientSocket = connectedClient->socket;
-    
-    struct sockaddr_in client = connectedClient->client;
+    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port
+    struct in_addr sourceIP = onlineClients[threadClientId].client.sin_addr; //source IP address
+    clientSocket = onlineClients[threadClientId].socket;
+    struct sockaddr_in client = onlineClients[threadClientId].client;
+	struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
+	
+	int messageid;
+	int i=0;
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
+	
     while (connected) {
         printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
-        if ((bytesRead = recv(clientSocket, recvbuf, sizeof(recvbuf), 0)) == -1)  {
-            perror("Recv()");
-            continue;
-        }
         
-        switch (recvbuf[PROTOCOL_INDEX]) {
-            case infoRequest: {
-                printf("Thread[%u]: Cliente da porta %d deseja obter informações sobre outro usuário.\n", (unsigned)tid, ntohs(client.sin_port));
-                //to-do: implementar este método
+		recvResp(buffer,onlineClients[threadClientId].socket);
+        
+		messageid = readByte(buffer);
+		
+        switch (messageid) 
+		{
+            case infoRequest: 
+			{
+                printf("Thread[%u]: Cliente da porta %d deseja obter informações sobre todos usuários.\n", (unsigned)tid, ntohs(client.sin_port));
+				int onlineUsers=0;
+                for(i=0;i<MAX_ONLINE_USERS; i++)
+				{
+					if (onlineClients[i].active==1)
+					{
+						onlineUsers++;
+					}
+				}
+				clearBuffer(buffer);
+				writeByte(0,buffer);//MESSAGE ID
+				writeInt(onlineUsers,buffer);
+				for(i=0;i<MAX_ONLINE_USERS; i++)
+				{
+					if (onlineClients[i].active==1)
+					{
+						writeString(onlineClients[i].phone, buffer);
+						writeString(onlineClients[i].listenIpAddress, buffer);
+						writeShort(onlineClients[i].listenPort buffer);
+					}
+				}
+				sendResp(buffer,clientSocket);
+				
                 break;
             }
-            case connectionRequest: {
+            case connectionRequest: 
+			{
                 printf("Thread[%u]: Cliente da porta %d deseja se conectar.\n", (unsigned)tid, ntohs(client.sin_port));
-                l = 1;
-                printf("O celular que esta se conectando eh: ");
                 
-                //to-do: método incompleto (não consegui terminar ainda - fique à vontade :P)
-                
-//                Client *client = (Client *)malloc(sizeof(Client));
-                memcpy(&connectedClient->ip_address, &sourceIP, sizeof(sourceIP));
-                strcmp(connectedClient->phone, recvbuf+l);
-                
-                do {
-//                    printf("%-10s |  ",recvbuf+l);
-                    printf("%s\n",recvbuf+l);
-                    l = getNextString(recvbuf, l);
-                    if (l == -1) break;
-                    printf("O cliente estarah ouvindo na porta: %s.\n",recvbuf+l);
-//                    memcpy(&client->port, recvbuf+l, sizeof(recvbuf+l));
-                    l = getNextString(recvbuf,l);
-                } while (l != -1);
+                onlineClients[threadClientId].phone = readString(buffer);
+				onlineClients[threadClientId].listenIpAddress = readString(buffer);
+				onlineClients[threadClientId].listenPort = readShort(buffer);
+				onlineClients[threadClientId].readyForCommunication = 1;
+				
+				printf("O celular que esta se conectando eh: %s",onlineClients[threadClientId].phone);
+				
                 break;
             }
-            case disconnectionRequest: {
+            case disconnectionRequest: 
+			{
                 printf("Thread[%u]: Cliente da porta %d deseja se desconectar.\n", (unsigned)tid, ntohs(client.sin_port));
-                connected = 0;
+                disconnectClient(&onlineClients[threadClientId])
                 break;
             }
-            default: {
+            default: 
+			{
                 printf("Thread[%u]: Comando de código %d desconhecido. Enviando resposta ao cliente da porta %d\n", (unsigned)tid, recvbuf[PROTOCOL_INDEX], ntohs(client.sin_port));
                 //to-do: implementar este método
 //                sendResp(sendbuf, clientSocket, invalido);
@@ -431,31 +429,45 @@ int main(int argc, const char * argv[]) {
      * ocorrerá a comunicação com o cliente.
      */
     namelen = sizeof(client);
-    
-    while (1) {
+	
+	int nextClientId = -1;
+    int i=0;
+	
+	for(i=0;i<MAX_ONLINE_USERS; i++)
+	{
+		clearClient(&onlineClients[i]);
+	}
+	
+    while (1) 
+	{
+		
         printf("Servidor pronto e aguardando novo cliente\n");
-        Client *incomingClient = (Client *)malloc(sizeof(Client));
-        if ((incomingClient->socket = accept(s, (struct sockaddr *)&incomingClient->client, &namelen)) == -1) {
+		for(i=0;i<MAX_ONLINE_USERS; i++)
+		{
+			if (onlineClients[i].active==0)
+			{
+				nextClientid=i;	
+				break;
+			}
+		}
+		
+		clearClient(&onlineClients[nextClientid]);
+
+        if ((onlineClients[nextClientid].socket = accept(s, (struct sockaddr *)&(onlineClients[nextClientid].client), &namelen)) == -1) 
+		{
             perror("Accept()");
             exit(5);
         }
+		
+		onlineClients[nextClientid].active = 1;
+		int *threadClientId = (int*) malloc (sizeof(int));
+		(*threadClientId) = nextClientid;
         
-        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(incomingClient->client.sin_port), incomingClient->socket);
-        
-        pthread_create(&thread_id, NULL, handle_client, (void *)incomingClient); //cria a thread
-        
-        /**
-         *  @author Roger Oba
-         *
-         *  Comentário/dúvida: acho que esse método (abaixo) não precisa ser chamado
-         *  aqui, uma vez que ele já está sendo chamado na condicional abaixo. A
-         *  documentação diz: "The effect of multiple pthread_detach() calls on the
-         *  same target thread is unspecified."
-         *
-         *  Não quero arriscar quebrar o código, houve testes quanto à isso? Quem
-         *  escreveu essa parte do código, por que deu detach duas vezes?
-         */
-        pthread_detach(thread_id);
+        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(onlineClients[nextClientid].client.sin_port), onlineClients[nextClientid].socket);
+      
+        pthread_create(&thread_id, NULL, handle_client, (void *)threadClientId); //cria a thread
+		
+		nextClientid = -1;
         
         
         if ((int *)thread_id > 0)  {
@@ -467,7 +479,5 @@ int main(int argc, const char * argv[]) {
         }
     }
     
-    //isso nunca é executado
-//    printf("Servidor terminou com sucesso.\n");
-//    exit(0);
+
 }
