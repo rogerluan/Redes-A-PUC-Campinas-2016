@@ -15,6 +15,8 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+
 
 #include <sys/ipc.h>            /* for all IPC function calls */
 #include <sys/shm.h>            /* for shmget(), shmat(), shmctl() */
@@ -23,6 +25,8 @@
 #include <unistd.h> // for close
 #include <sys/wait.h> // wait
 #include <pthread.h>
+
+ #include <ifaddrs.h>
 
 
 /////////// - Global Variables
@@ -36,7 +40,7 @@
 pthread_t thread_id;
 pthread_mutex_t mutex;
 
-enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
+enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest,AtualizarLista};
 
 /////////// - Structures
 struct SocketBuffer
@@ -60,7 +64,7 @@ struct Client {
 };
 
 struct Client onlineClients[MAX_ONLINE_USERS];
-
+struct Client serverOnlineClients[MAX_ONLINE_USERS];
 
 /////////// - Read & Write Methods
 
@@ -272,7 +276,24 @@ void disconnectClient(Client *client)
     clearBuffer(&(client->buffer));
 	client->active=0;
 }
+
+/////////// - Shared Vars
+int port;
+char myIp[16];
+socklen_t serverSocket;
 /////////// - Other Functions
+
+void printMenu() {
+    //improves readability
+    printf("\n**********************************\n");
+    printf("Opcoes:\n");
+    printf("1 - Adicionar Contato\n");
+    printf("2 - Criar Grupo de Broadcast\n");
+    printf("3 - Enviar Mensagem\n");
+    printf("4 - Enviar Foto\n");
+    printf("5 - Sair\n");
+    printf("**********************************\n");
+}
 
 /**
  *  Method to be executed every time a new thread is created. A new thread is
@@ -280,7 +301,8 @@ void disconnectClient(Client *client)
  *
  *  @param client_connection Client connection pointer of type Client.
  */
-void *handle_client(void *threadClientIdarg) {
+void *handle_client(void *threadClientIdarg) 
+{
     
     int threadClientId = (*(int*)threadClientIdarg);
     free(threadClientIdarg);
@@ -311,28 +333,6 @@ void *handle_client(void *threadClientIdarg) {
         {
             case infoRequest:
             {
-                printf("Thread[%u]: Cliente da porta %d deseja obter informações sobre todos usuários.\n", (unsigned)tid, ntohs(client.sin_port));
-                int onlineUsers=0;
-                for(i=0;i<MAX_ONLINE_USERS; i++)
-                {
-                    if (onlineClients[i].active==1)
-                    {
-                        onlineUsers++;
-                    }
-                }
-                clearBuffer(buffer);
-                writeByte(0, buffer);//MESSAGE ID
-                writeInt(onlineUsers, buffer);
-                for(i=0;i<MAX_ONLINE_USERS; i++)
-                {
-                    if (onlineClients[i].active==1)
-                    {
-                        writeString(onlineClients[i].phone, buffer);
-                        writeString(onlineClients[i].listenIpAddress, buffer);
-                        writeShort(onlineClients[i].listenPort, buffer);
-                    }
-                }
-                sendResp(buffer, clientSocket);
                 
                 break;
             }
@@ -340,10 +340,7 @@ void *handle_client(void *threadClientIdarg) {
             {
                 printf("Thread[%u]: Cliente da porta %d deseja se conectar.\n", (unsigned)tid, ntohs(client.sin_port));
                 
-                onlineClients[threadClientId].phone = readString(buffer);
-                onlineClients[threadClientId].listenIpAddress = readString(buffer);
-                onlineClients[threadClientId].listenPort = readShort(buffer);
-                onlineClients[threadClientId].readyForCommunication = 1;
+                
                 
                 printf("O celular que esta se conectando eh: %s", onlineClients[threadClientId].phone);
                 
@@ -367,39 +364,181 @@ void *handle_client(void *threadClientIdarg) {
     pthread_exit(0);
 }
 
+
+void *clientOperation(void *threadClientIdarg) 
+{
+	int option,i;
+    struct SocketBuffer myBuff;
+	startBuffer(&myBuff);
+	clearBuffer(&myBuff);
+	
+	 for(i=0;i<MAX_ONLINE_USERS; i++)
+    {
+        clearClient(&serverOnlineClients[i]);
+    }
+		
+    int connected =1;
+	//serverSocket
+    while (connected) 
+	{
+		printMenu();
+		scanf("%d", &option);
+		switch(option)
+		{
+				
+			//Fernando: cansei, tem que adicionar os cases de cada funcao, 
+			//Eu pensei em ter 3 arrays, um de usuarios recebido pelo servidor, outro de grupos e o terceiro dos usuarios conectados neste cliente, o de grupos deve conter os phones de cada grupo iniciado
+			//Adicionar um contato  [e o mesmo que adicionar um grupo de uma pessoa, possivelmente com uma flag alertando isso
+			//Toda vez que for mandar uma msg, pega o nome do contato pelo grupo e o ip pelo array de users online
+			//Pra atualizar o array de users online podia ter uma opcao no menu pra fazer isso (acho que eh o jeito mais facil)
+			
+			//exemplo de enviar msg:
+			//clearbuffer(&myBuff);
+			//writeByte(msgid,&myBuff);
+			//sendResp(&myBuff,serverSocket);
+			//case ...:
+				
+				
+			case AtualizarLista:
+				;int usersOnline = 0;
+				//Envia msg pedindo users
+				clearBuffer(&myBuff);
+				writeByte(0,&myBuff);
+				sendResp(&myBuff,serverSocket);
+				
+				recvResp(&myBuff,serverSocket);
+				usersOnline = readInt(&myBuff);
+				for (i=0;i<usersOnline;i++)
+				{
+					serverOnlineClients[i].phone = readString(&myBuff);
+					serverOnlineClients[i].listenIpAddress = readString(&myBuff);
+					serverOnlineClients[i].listenPort = readShort(&myBuff);
+					serverOnlineClients[i].readyForCommunication = 1;
+				}
+				
+				break;
+				
+				
+			
+			default:
+				printf("Erro, comando n'ao reconhecido");
+				break;
+		
+		}
+		
+    }
+    pthread_exit(0);
+}
+
 /////////// - Main
 
-int main(int argc, const char * argv[]) {
-    
+int main(int argc, const char * argv[]) 
+{ 
     unsigned short port;
+	unsigned short portServer;
     struct sockaddr_in client;
     struct sockaddr_in server;
+	struct sockaddr_in server2;
+	struct hostent *hostnm;    
+	
     socklen_t s;                     /* Socket para aceitar conexões */
     socklen_t namelen;
     //signal(SIGCHLD,receive_child_signal);
+	
+	int i=0;
+    
+    for(i=0;i<MAX_ONLINE_USERS; i++)
+    {
+        clearClient(&onlineClients[i]);
+    }
+	
     
     pthread_mutex_init(&mutex, NULL);
     
-    
-    /*
-     * O primeiro argumento (argv[1]) é a porta
-     * onde o servidor aguardará por conexões
-     */
-    if (argc != 2) {
-        fprintf(stderr, "Use: %s porta\n", argv[0]);
-        exit(1);
-    }
-    
-    port = (unsigned short)atoi(argv[1]);
+    //============================================================================================
+	//ESCOLHE PORTA E PEGA IP
+    port = (unsigned short)rand() %40000 + 20000; //Portas de 20000 a 60000 
+	fprintf(stderr, "Ouvindo Porta: %d porta\n", port);
     
     /*
      * Cria um socket TCP (stream) para aguardar conexões
      */
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) 
+	{
         perror("Socket()");
         exit(2);
     }
+	
+	struct ifaddrs *tmp,*addrs;
+	getifaddrs(&addrs);
+	tmp = (addrs);	
+
+	int jumpFirst = 0;
+	while (tmp)
+	{
+		if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET)
+		{
+			struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
+			if (jumpFirst==1)
+			{
+				strcpy(myIp,inet_ntoa(pAddr->sin_addr));
+				printf("Meu IP: %s\n", myIp);
+				break;
+			}
+			jumpFirst++;
+		}
+		tmp = tmp->ifa_next;
+	}
+	freeifaddrs(addrs);
+	
+	//============================================================================================
+	
+	//CRIA THREAD DE CLIENTE
+	if (argc != 3) 
+    {
+        fprintf(stderr, "Use: %s hostname porta\n", argv[0]);
+        exit(1);
+    }
+    /*
+     * Obtendo o endereço IP do servidor
+     */
+    hostnm = gethostbyname(argv[1]);
+    if (hostnm == (struct hostent *) 0)
+    {
+        fprintf(stderr, "Gethostbyname failed\n");
+        exit(2);
+    }
+    portServer = (unsigned short) atoi(argv[2]);
+
+    /*
+     * Define o endereço IP e a porta do servidor
+     */
+    server2.sin_family      = AF_INET;
+    server2.sin_port        = htons(portServer);
+    server2.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
+
+    /*
+     * Cria um socket TCP (stream)
+     */
+    if ((serverSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        perror("Socket()");
+        exit(3);
+    }
+
+    /* Estabelece conexão com o servidor */
+    if (connect(serverSocket, (struct sockaddr *)&server2, sizeof(server2)) < 0)
+    {
+        perror("Connect()");
+        exit(4);
+    }
+	
+	pthread_create(&thread_id, NULL, clientOperation, NULL); //cria a thread de cliente
+
+	//============================================================================================
+	
     
+	//CRIA COISAS DE SERVIDOR
     /*
      * Define a qual endereço IP e porta o servidor estará ligado.
      * IP = INADDDR_ANY -> faz com que o servidor se ligue em todos
@@ -408,7 +547,8 @@ int main(int argc, const char * argv[]) {
     server.sin_family = AF_INET;
     server.sin_port   = htons(port);
     server.sin_addr.s_addr = INADDR_ANY;
-    
+	
+	
     /*
      * Liga o servidor à porta definida anteriormente.
      */
@@ -423,7 +563,8 @@ int main(int argc, const char * argv[]) {
      * cria uma fila de conexões pendentes.
      */
     
-    if (listen(s, 1) != 0) {
+    if (listen(s, 1) != 0) 
+	{
         perror("Listen()");
         exit(4);
     }
@@ -436,16 +577,10 @@ int main(int argc, const char * argv[]) {
     namelen = sizeof(client);
     
     int nextClientId = -1;
-    int i=0;
     
-    for(i=0;i<MAX_ONLINE_USERS; i++)
-    {
-        clearClient(&onlineClients[i]);
-    }
     
     while (1)
     {
-        
         printf("Servidor pronto e aguardando novo cliente\n");
         for(i=0;i<MAX_ONLINE_USERS; i++)
         {
@@ -474,7 +609,8 @@ int main(int argc, const char * argv[]) {
         
         nextClientId = -1;
         
-        if ((int *)thread_id > 0)  {
+        if ((int *)thread_id > 0)  
+		{
             printf("Thread filha criada: %u\n", (unsigned) thread_id);
             pthread_detach(thread_id);
         } else {
