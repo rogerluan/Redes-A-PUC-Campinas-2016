@@ -208,6 +208,7 @@ void sendResp(struct SocketBuffer *buff, int ns)
 //@ns = socket descriptor
 void recvResp(struct SocketBuffer *buff, int ns)
 {
+	char *oldbuff;
     ssize_t bytesToReceive = 0, bytesReceived, totalBytesReceived = 0, sizeToReceive = 0;
     clearBuffer(buff);
     
@@ -265,6 +266,7 @@ void clearClient(Client *client)
 void disconnectClient(Client *client)
 {
 //    shutdown(client->socket);
+	client->readyForCommunication = 0;
     close(client->socket);
     free(client->phone);
     free(client->listenIpAddress);
@@ -272,8 +274,7 @@ void disconnectClient(Client *client)
     client->listenPort = -1;
     startBuffer(&(client->buffer));
     clearBuffer(&(client->buffer));
-    client->active=0;
-    client->readyForCommunication = 0;
+	client->active=0;
 }
 /////////// - Other Functions
 
@@ -285,7 +286,7 @@ void disconnectClient(Client *client)
  */
 void *handle_client(void *threadClientIdarg) {
     
-    int threadClientId = *threadClientIdarg;
+    int threadClientId = (*(int*)threadClientIdarg);
     free(threadClientIdarg);
     
     /* Variaveis exclusivas da thread */
@@ -356,7 +357,7 @@ void *handle_client(void *threadClientIdarg) {
             case disconnectionRequest:
             {
                 printf("Thread[%u]: Cliente da porta %d deseja se desconectar.\n", (unsigned)tid, ntohs(client.sin_port));
-                disconnectClient(&onlineClients[threadClientId])
+                disconnectClient(&onlineClients[threadClientId]);
                 break;
             }
             default:
