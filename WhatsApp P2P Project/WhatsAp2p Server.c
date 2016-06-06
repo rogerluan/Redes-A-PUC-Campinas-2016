@@ -36,14 +36,20 @@
 pthread_t thread_id;
 pthread_mutex_t mutex;
 
-enum protocol {connectionRequest = 1, infoRequest, disconnectionRequest};
+enum serverMessages
+{
+    CONNECTION_REQUEST = 1,
+    UPDATE_REQUEST,
+    DISCONNECT_REQUEST,
+};
+
 
 /////////// - Structures
 struct SocketBuffer
 {
     char *buffer;
-    int pos;
-    int size;
+    ssize_t pos;
+    ssize_t size;
 };
 
 
@@ -54,6 +60,7 @@ struct Client {
     char *listenIpAddress;
     unsigned short listenPort;
     char *phone;
+    char *name;
     struct SocketBuffer buffer;
     int active;
     int readyForCommunication;
@@ -172,7 +179,15 @@ void clearBuffer(struct SocketBuffer *buff)
 }
 void startBuffer(struct SocketBuffer *buff)
 {
-    buff->size = 0;
+    buff->size = 1;
+    buff->buffer = (char*)malloc(1);
+}
+void closeBuffer(struct SocketBuffer *buff)
+{
+    if (buff->buffer!=NULL)
+    {
+        free(buff->buffer);
+    }
 }
 
 //@ns = socket descriptor
@@ -265,6 +280,7 @@ void disconnectClient(Client *client)
 	client->readyForCommunication = 0;
     close(client->socket);
     free(client->phone);
+    free(client->name);
     free(client->listenIpAddress);
     client->socket = -1;
     client->listenPort = -1;
@@ -280,7 +296,52 @@ void disconnectClient(Client *client)
  *
  *  @param client_connection Client connection pointer of type Client.
  */
+
+void *updateClient(void *myClientarg)
+{
+    int myTimer=0,i=0;
+    int myClient = (*(int*)myClientarg);
+    struct SocketBuffer buff;
+    struct SocketBuffer *buffer = &buff;
+    startBuffer(buffer);
+    clearBuffer(buffer);
+    while(onlineClients[myClient].readyForCommunication==1)
+    {
+        myTimer++;
+        if (myTimer==10000)
+        {
+            int onlineUsers=0;
+            for(i=0;i<MAX_ONLINE_USERS; i++)
+            {
+                if (onlineClients[i].readyForCommunication==1)
+                {
+                    onlineUsers++;
+                }
+            }
+            clearBuffer(buffer);
+            writeByte(UPDATE_REQUEST, buffer);//MESSAGE ID
+            writeInt(onlineUsers, buffer);
+            for(i=0;i<MAX_ONLINE_USERS; i++)
+            {
+                if (onlineClients[i].readyForCommunication==1)
+                {
+                    writeString(onlineClients[i].name, buffer);
+                    writeString(onlineClients[i].phone, buffer);
+                    writeString(onlineClients[i].listenIpAddress, buffer);
+                    writeShort(onlineClients[i].listenPort, buffer);
+                }
+            }
+            sendResp(buffer, onlineClients[myClient].socket);
+        }
+    }
+    closeBuffer(buffer);
+    pthread_exit(0);
+}
+
+
+
 void *handle_client(void *threadClientIdarg) {
+    
     
     int threadClientId = (*(int*)threadClientIdarg);
     free(threadClientIdarg);
@@ -300,7 +361,10 @@ void *handle_client(void *threadClientIdarg) {
     int i=0;
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     
-    while (connected) {
+    pthread_create(&thread_id, NULL, updateClient, (void *)&threadClientId); //cria a thread
+    
+    while (connected)
+    {
         printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
         
         recvResp(buffer, onlineClients[threadClientId].socket);
@@ -309,49 +373,31 @@ void *handle_client(void *threadClientIdarg) {
         
         switch (messageid)
         {
-            case infoRequest:
+            case UPDATE_REQUEST:
             {
-                printf("Thread[%u]: Cliente da porta %d deseja obter informações sobre todos usuários.\n", (unsigned)tid, ntohs(client.sin_port));
-                int onlineUsers=0;
-                for(i=0;i<MAX_ONLINE_USERS; i++)
-                {
-                    if (onlineClients[i].active==1)
-                    {
-                        onlineUsers++;
-                    }
-                }
-                clearBuffer(buffer);
-                writeByte(0, buffer);//MESSAGE ID
-                writeInt(onlineUsers, buffer);
-                for(i=0;i<MAX_ONLINE_USERS; i++)
-                {
-                    if (onlineClients[i].active==1)
-                    {
-                        writeString(onlineClients[i].phone, buffer);
-                        writeString(onlineClients[i].listenIpAddress, buffer);
-                        writeShort(onlineClients[i].listenPort, buffer);
-                    }
-                }
-                sendResp(buffer, clientSocket);
-                
                 break;
             }
-            case connectionRequest:
+            case CONNECTION_REQUEST:
             {
                 printf("Thread[%u]: Cliente da porta %d deseja se conectar.\n", (unsigned)tid, ntohs(client.sin_port));
                 
+                onlineClients[threadClientId].name = readString(buffer);
                 onlineClients[threadClientId].phone = readString(buffer);
                 onlineClients[threadClientId].listenIpAddress = readString(buffer);
                 onlineClients[threadClientId].listenPort = readShort(buffer);
                 onlineClients[threadClientId].readyForCommunication = 1;
                 
-                printf("O celular que esta se conectando eh: %s", onlineClients[threadClientId].phone);
+                printf("O celular que esta se conectando eh: %s com usuario: %s", onlineClients[threadClientId].phone,onlineClients[threadClientId].name);
+                //envia confirmacao de conexao
+                clearBuffer(buffer);
+                writeByte(CONNECTION_REQUEST,buffer);
+                sendResp(buffer, clientSocket);
                 
                 break;
             }
-            case disconnectionRequest:
+            case DISCONNECT_REQUEST:
             {
-                printf("Thread[%u]: Cliente da porta %d deseja se desconectar.\n", (unsigned)tid, ntohs(client.sin_port));
+                printf("Thread[%u]: Cliente da porta %d esta se desconectando.\n", (unsigned)tid, ntohs(client.sin_port));
                 disconnectClient(&onlineClients[threadClientId]);
                 break;
             }
