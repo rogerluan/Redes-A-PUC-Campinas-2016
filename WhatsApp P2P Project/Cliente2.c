@@ -549,15 +549,49 @@ void *serverReceiver(void *param)
 
 }
 
+int connectToServer(const char *hostnameParam, unsigned short port) {
+    
+    struct hostent *hostname;
+    struct sockaddr_in server;
+    int returnSocket;
+    
+    //Obtains server IP address
+    hostname = gethostbyname(hostnameParam);
+    if (hostname == (struct hostent *)0) {
+        fprintf(stderr, "Gethostbyname failed\n");
+        exit(2);
+    }
+    
+    //Defines server IP address and port.
+    server.sin_family      = AF_INET;
+    server.sin_port        = htons(port);
+    server.sin_addr.s_addr = *((unsigned long *)hostname->h_addr);
+    
+    //Creates socket
+    if ((returnSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Socket()");
+        exit(3);
+    }
+    
+    //Establishes a connection with the server.
+    if (connect(returnSocket, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        perror("Connect()");
+        exit(4);
+    }
+    
+    return returnSocket;
+}
+
 void *P2Sender(void * P2Messagearg)
 {
     struct P2Message *message = (struct P2Message*)P2Messagearg;
     
     //abre conexao tcp com message.listenport / message.listenip
+    int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
     
-    //sendResp(message->buffer,newOpenedSocket)
-    //usleep(50000000);
-    //close(newOpenedSocket);
+    sendResp(message->buffer, newOpenedSocket);
+    usleep(50000000);
+    close(newOpenedSocket);
 
     pthread_exit(0);
 }
@@ -703,11 +737,8 @@ void *clientOperation(void *param)
 int main(int argc, const char * argv[])
 {
     unsigned short port;
-    unsigned short portServer;
     struct sockaddr_in client;
     struct sockaddr_in server;
-    struct sockaddr_in server2;
-    struct hostent *hostnm;
     
     socklen_t s;                     /* Socket para aceitar conexões */
     socklen_t namelen;
@@ -777,39 +808,8 @@ int main(int argc, const char * argv[])
         fprintf(stderr, "Use: %s hostname porta\n", argv[0]);
         exit(1);
     }
-    /*
-     * Obtendo o endereço IP do servidor
-     */
-    hostnm = gethostbyname(argv[1]);
-    if (hostnm == (struct hostent *) 0)
-    {
-        fprintf(stderr, "Gethostbyname failed\n");
-        exit(2);
-    }
-    portServer = (unsigned short) atoi(argv[2]);
     
-    /*
-     * Define o endereço IP e a porta do servidor
-     */
-    server2.sin_family      = AF_INET;
-    server2.sin_port        = htons(portServer);
-    server2.sin_addr.s_addr = *((unsigned long *)hostnm->h_addr);
-    
-    /*
-     * Cria um socket TCP (stream)
-     */
-    if ((serverSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        perror("Socket()");
-        exit(3);
-    }
-    
-    /* Estabelece conexão com o servidor */
-    if (connect(serverSocket, (struct sockaddr *)&server2, sizeof(server2)) < 0)
-    {
-        perror("Connect()");
-        exit(4);
-    }
+    serverSocket = connectToServer(argv[1], (unsigned short)atoi(argv[2]));
     
     pthread_create(&thread_id, NULL, clientOperation, NULL); //cria a thread de operacoes do usuario
     pthread_create(&thread_id, NULL, serverReceiver, NULL); //cria a thread de recebr dados do server
