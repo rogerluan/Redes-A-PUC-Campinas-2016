@@ -76,6 +76,12 @@ struct SocketBuffer
     ssize_t size;
 };
 
+struct P2Message
+{
+    struct SocketBuffer *buffer;
+    char *listenIpAddress;
+    unsigned short listenPort;
+};
 
 typedef struct Client Client;
 struct Client {
@@ -543,6 +549,20 @@ void *serverReceiver(void *param)
 
 }
 
+void *P2Sender(void * P2Messagearg)
+{
+    struct P2Message *message = (struct P2Message*)P2Messagearg;
+    
+    //abre conexao tcp com message.listenport / message.listenip
+    
+    //sendResp(message->buffer,newOpenedSocket)
+    //usleep(50000000);
+    //close(newOpenedSocket);
+
+    pthread_exit(0);
+}
+
+
 void *clientOperation(void *param)
 {
     int option,i, choice, tempSize;
@@ -577,30 +597,14 @@ void *clientOperation(void *param)
         switch(option)
         {
             case OP_ADDCONTACT:
-                printf("ID - Nome - Phone");
-                for (i=0;i<usersOnline;i++)
-                {
-                    printf("%d - %s - %s",i,serverOnlineClients[i].name,serverOnlineClients[i].phone);
-                }
-                printf("Entre com o ID do usuario que gostaria de adicionar");
-                scanf("%d", &choice);
-                if (choice>usersOnline)
-                {
-                    printf("id invalido\n");
-                    continue;
-                }
-                if (serverOnlineClients[choice].readyForCommunication==0)
-                {
-                    printf("id invalido\n");
-                    continue;
-                }
-                
                 for (i=0;i<MAXGROUPS;i++)
                 {
                    if (myGroups[i].active==0)
                    {
-                       strcpy(myGroups[i].contacts[0].name,serverOnlineClients[choice].name);
-                       strcpy(myGroups[i].contacts[0].phone,serverOnlineClients[choice].phone);
+                       printf("Digite o nome do amiguinho \n");
+                       gets(myGroups[i].contacts[0].name);
+                       printf("Digite o telefone do amiguinho \n");
+                       gets(myGroups[i].contacts[0].phone);
                        myGroups[i].size = 1;
                        myGroups[i].active=1;
                        break;
@@ -620,21 +624,21 @@ void *clientOperation(void *param)
                     }
                 }
                 tempSize=0;
+                choice = 0;
+                printf("Digite o id do usuario que quer adicionar ao novo grupo, digite -1 para voltar\n");
                 for (i=0;i<MAXGROUPS;i++)
                 {
                     if (myGroups[i].active==0)
                     {
-                        choice = 0;
-                        printf("Digite o id do usuario que quer adicionar ao novo grupo, digite -1 para voltar\n");
                         while(choice!=-1 && tempSize < MAXGROUPCONTACT)
                         {
                             scanf("%d",&choice);
-                            if (choice>usersOnline)
+                            if (choice>MAXGROUPS)
                             {
                                 printf("id invalido\n");
                                 continue;
                             }
-                            if (serverOnlineClients[choice].readyForCommunication==0)
+                            if (myGroups[choice].active==0)
                             {
                                 printf("id invalido\n");
                                 continue;
@@ -656,7 +660,15 @@ void *clientOperation(void *param)
                 
                 break;
             case OP_SENDMESSAGE:
-                //Envia msg pedindo users
+                ;
+                char text[100];
+                struct P2Message *message= (struct P2Message*)malloc(sizeof(struct P2Message));
+                message->buffer = (struct SocketBuffer*)malloc(sizeof(struct SocketBuffer));
+                startBuffer(message->buffer);
+                clearBuffer(message->buffer);
+                printf("Digite sua mensagem:");
+                gets(text);
+                
                 
                 break;
             case OP_SENDIMAGE:
@@ -664,12 +676,16 @@ void *clientOperation(void *param)
                 
                 break;
             case OP_UPDATESCREEN:
-                //Envia msg pedindo users
-                
+                //do nothing actually, screen will be redarawn on the top of this while
                 break;
             case OP_LEAVE:
                 //Envia msg pedindo users
+                clearBuffer(&myBuff);
+                writeByte(DISCONNECT_REQUEST,&myBuff);
+                sendResp(&myBuff,serverSocket);
                 
+                //SERIALIZA myGroups para um arquivo
+                //exit
                 break;
             default:
                 printf("Erro, comando nao reconhecido");

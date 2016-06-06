@@ -349,7 +349,7 @@ void *handle_client(void *threadClientIdarg) {
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
     int messageid, connected = 1, i = 0;
-    char recvbuf[TAM_BUF];
+
     pthread_t tid = pthread_self();
     
 //    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port
