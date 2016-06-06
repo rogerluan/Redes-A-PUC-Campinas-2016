@@ -186,11 +186,11 @@ char *readString(struct SocketBuffer *buff)
     return retval;
 }
 
-char *readFile(int size,struct SocketBuffer *buff)
+char *readFile(int size, struct SocketBuffer *buff)
 {
     char *newFile;
     newFile = (char*)malloc(size);
-    memcpy(newFile,&(buff->buffer[buff->pos]),size);
+    memcpy(newFile, &(buff->buffer[buff->pos]), size);
     buff->pos+=size;
     if (buff->pos > buff->size-1)
         buff->pos = buff->size-1;
@@ -379,7 +379,7 @@ void printMenu() {
     printf("Messages: \n");
     for(i=0;i<LASTMESSAGE+1;i++)
     {
-        printf("%s",lastMessages[i]);
+        printf("%s", lastMessages[i]);
     }
     printf("\n**********************************\n");
     printf("Opcoes:\n");
@@ -416,7 +416,7 @@ void *handle_client(void *threadClientIdarg)
     int messageid;
     int i=0;
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
-    char *sender,*phone,*msg,*file;
+    char *sender, *phone, *msg, *file;
     int fileSize=0;
     while (connected)
     {
@@ -435,15 +435,15 @@ void *handle_client(void *threadClientIdarg)
                 msg = readString(buffer);
                 for(i=1;i<LASTMESSAGE+1;i++)
                 {
-                    strcpy(lastMessages[i-1],lastMessages[i]);
+                    strcpy(lastMessages[i-1], lastMessages[i]);
                 }
-                strcpy(lastMessages[LASTMESSAGE],"");
-                strcat(lastMessages[LASTMESSAGE],sender);
-                strcat(lastMessages[LASTMESSAGE]," / ");
-                strcat(lastMessages[LASTMESSAGE],phone);
-                strcat(lastMessages[LASTMESSAGE],":\n");
-                strcat(lastMessages[LASTMESSAGE],msg);
-                strcat(lastMessages[LASTMESSAGE],"\n");
+                strcpy(lastMessages[LASTMESSAGE], "");
+                strcat(lastMessages[LASTMESSAGE], sender);
+                strcat(lastMessages[LASTMESSAGE], " / ");
+                strcat(lastMessages[LASTMESSAGE], phone);
+                strcat(lastMessages[LASTMESSAGE], ":\n");
+                strcat(lastMessages[LASTMESSAGE], msg);
+                strcat(lastMessages[LASTMESSAGE], "\n");
                 free(sender);
                 free(phone);
                 free(msg);
@@ -453,26 +453,26 @@ void *handle_client(void *threadClientIdarg)
                 sender = readString(buffer);
                 phone = readString(buffer);
                 fileSize = readInt(buffer);
-                file = readFile(fileSize,buffer);
+                file = readFile(fileSize, buffer);
                 
-                FILE *diskFile= fopen("photo.png","wb");
+                FILE *diskFile= fopen("photo.png", "wb");
                 if (diskFile!=NULL)
                 {
-                    fwrite(file,0,fileSize,diskFile);
+                    fwrite(file, 0, fileSize, diskFile);
                     fclose(diskFile);
                 }
                 
                 for(i=1;i<LASTMESSAGE+1;i++)
                 {
-                    strcpy(lastMessages[i-1],lastMessages[i]);
+                    strcpy(lastMessages[i-1], lastMessages[i]);
                 }
-                strcpy(lastMessages[LASTMESSAGE],"");
-                strcat(lastMessages[LASTMESSAGE],sender);
-                strcat(lastMessages[LASTMESSAGE]," / ");
-                strcat(lastMessages[LASTMESSAGE],phone);
-                strcat(lastMessages[LASTMESSAGE],"Image Received, saved in:");
-                strcat(lastMessages[LASTMESSAGE],"photo.png");
-                strcat(lastMessages[LASTMESSAGE],"\n");
+                strcpy(lastMessages[LASTMESSAGE], "");
+                strcat(lastMessages[LASTMESSAGE], sender);
+                strcat(lastMessages[LASTMESSAGE], " / ");
+                strcat(lastMessages[LASTMESSAGE], phone);
+                strcat(lastMessages[LASTMESSAGE], "Image Received, saved in:");
+                strcat(lastMessages[LASTMESSAGE], "photo.png");
+                strcat(lastMessages[LASTMESSAGE], "\n");
                 
                 free(file);
                 free(sender);
@@ -502,7 +502,7 @@ void *serverReceiver(void *param)
     int i=0;
     while(operational)
     {
-        recvResp(&myBuff,serverSocket);
+        recvResp(&myBuff, serverSocket);
         messageid = readByte(&myBuff);
         switch (messageid)
         {
@@ -599,8 +599,8 @@ void *P2Sender(void * P2Messagearg)
 
 void *clientOperation(void *param)
 {
-    int option,i, choice, tempSize;
-    char nome[50],phone[PHONE_SIZE];
+    int option, i, choice, tempSize;
+    char nome[50], phone[PHONE_SIZE];
     struct SocketBuffer myBuff;
     startBuffer(&myBuff);
     clearBuffer(&myBuff);
@@ -611,12 +611,12 @@ void *clientOperation(void *param)
     
     startBuffer(&myBuff);
     clearBuffer(&myBuff);
-    writeByte(CONNECTION_REQUEST,&myBuff);
-    writeString(nome,&myBuff);
-    writeString(phone,&myBuff);
-    writeString(myIp,&myBuff);
-    writeShort(port,&myBuff);
-    sendResp(&myBuff,serverSocket);
+    writeByte(CONNECTION_REQUEST, &myBuff);
+    writeString(nome, &myBuff);
+    writeString(phone, &myBuff);
+    writeString(myIp, &myBuff);
+    writeShort(port, &myBuff);
+    sendResp(&myBuff, serverSocket);
     
     while(dontStartOperations)
     {
@@ -654,7 +654,7 @@ void *clientOperation(void *param)
                 {
                     if (myGroups[i].active==1 && myGroups[i].size==1)
                     {
-                        printf("%d %s %s",i,myGroups[i].contacts[0].name,myGroups[i].contacts[0].phone);
+                        printf("%d %s %s", i, myGroups[i].contacts[0].name, myGroups[i].contacts[0].phone);
                     }
                 }
                 tempSize=0;
@@ -666,7 +666,7 @@ void *clientOperation(void *param)
                     {
                         while(choice!=-1 && tempSize < MAXGROUPCONTACT)
                         {
-                            scanf("%d",&choice);
+                            scanf("%d", &choice);
                             if (choice>MAXGROUPS)
                             {
                                 printf("id invalido\n");
@@ -686,12 +686,11 @@ void *clientOperation(void *param)
                             }
                         }
                         if (tempSize>0)
+                        {
                             myGroups[i].active = 1;
-                        
+                        }
                     }
                 }
-                
-                
                 break;
             case OP_SENDMESSAGE:
                 ;
@@ -702,7 +701,6 @@ void *clientOperation(void *param)
                 clearBuffer(message->buffer);
                 printf("Digite sua mensagem:");
                 gets(text);
-                
                 
                 break;
             case OP_SENDIMAGE:
@@ -715,8 +713,8 @@ void *clientOperation(void *param)
             case OP_LEAVE:
                 //Envia msg pedindo users
                 clearBuffer(&myBuff);
-                writeByte(DISCONNECT_REQUEST,&myBuff);
-                sendResp(&myBuff,serverSocket);
+                writeByte(DISCONNECT_REQUEST, &myBuff);
+                sendResp(&myBuff, serverSocket);
                 
                 //SERIALIZA myGroups para um arquivo
                 //exit
@@ -739,10 +737,8 @@ int main(int argc, const char * argv[])
     unsigned short port;
     struct sockaddr_in client;
     struct sockaddr_in server;
-    
     socklen_t s;                     /* Socket para aceitar conexões */
     socklen_t namelen;
-    //signal(SIGCHLD,receive_child_signal);
     
     int i=0;
     operational = 1;
@@ -753,7 +749,7 @@ int main(int argc, const char * argv[])
     }
     for(i=0;i<LASTMESSAGE+1;i++)
     {
-        strcpy(lastMessages[i],"\n");
+        strcpy(lastMessages[i], "\n");
     }
     for(i=0;i<MAXGROUPS;i++)
     {
@@ -778,7 +774,7 @@ int main(int argc, const char * argv[])
         exit(2);
     }
     
-    struct ifaddrs *tmp,*addrs;
+    struct ifaddrs *tmp, *addrs;
     getifaddrs(&addrs);
     tmp = (addrs);
     
@@ -790,7 +786,7 @@ int main(int argc, const char * argv[])
             struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
             if (jumpFirst==1)
             {
-                strcpy(myIp,inet_ntoa(pAddr->sin_addr));
+                strcpy(myIp, inet_ntoa(pAddr->sin_addr));
                 printf("Meu IP: %s\n", myIp);
                 break;
             }

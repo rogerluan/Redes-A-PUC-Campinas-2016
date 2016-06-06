@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C131ADAD1D05AE2400D13F75 /* Cliente2.c in Sources */ = {isa = PBXBuildFile; fileRef = C131ADAC1D05AE2400D13F75 /* Cliente2.c */; };
+		C131ADAD1D05AE2400D13F75 /* WhatsAp2p-Client.c in Sources */ = {isa = PBXBuildFile; fileRef = C131ADAC1D05AE2400D13F75 /* WhatsAp2p-Client.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,7 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C131ADAC1D05AE2400D13F75 /* Cliente2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Cliente2.c; sourceTree = SOURCE_ROOT; };
+		C131ADAC1D05AE2400D13F75 /* WhatsAp2p-Client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "WhatsAp2p-Client.c"; sourceTree = SOURCE_ROOT; };
 		C5B3AA281D01F62300E617A7 /* WhatsAp2p Client */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "WhatsAp2p Client"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -57,7 +57,7 @@
 		C5B3AA2A1D01F62300E617A7 /* WhatsAp2p Client */ = {
 			isa = PBXGroup;
 			children = (
-				C131ADAC1D05AE2400D13F75 /* Cliente2.c */,
+				C131ADAC1D05AE2400D13F75 /* WhatsAp2p-Client.c */,
 			);
 			path = "WhatsAp2p Client";
 			sourceTree = "<group>";
@@ -118,7 +118,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C131ADAD1D05AE2400D13F75 /* Cliente2.c in Sources */,
+				C131ADAD1D05AE2400D13F75 /* WhatsAp2p-Client.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
