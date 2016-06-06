@@ -82,7 +82,7 @@ void *buffRead(int size, struct SocketBuffer *buff)
     return ptr;
 }
 
-void buffWrite(void *ptr, int size, struct SocketBuffer *buff)
+void buffWrite(void *ptr, ssize_t size, struct SocketBuffer *buff)
 {
     char *oldbuff;
     //Aloc the necessary amount of memory + margin
@@ -121,8 +121,8 @@ double readDouble(struct SocketBuffer *buff)
 char *readString(struct SocketBuffer *buff)
 {
     char now;
-    int initialPos=buff->pos;
-    int size;
+    ssize_t initialPos=buff->pos;
+    ssize_t size;
     char *retval;
     
     now = buff->buffer[buff->pos];
@@ -198,7 +198,7 @@ void sendResp(struct SocketBuffer *buff, int ns)
     
     startBuffer(&sendBuff);
     clearBuffer(&sendBuff);
-    writeInt(buff->pos, &sendBuff);
+    writeInt((int)buff->pos, &sendBuff);
     buffWrite((void*)buff->buffer, buff->pos, &sendBuff);
     
     totalToSend = sendBuff.pos;
@@ -338,8 +338,6 @@ void *updateClient(void *myClientarg)
     pthread_exit(0);
 }
 
-
-
 void *handle_client(void *threadClientIdarg) {
     
     
@@ -348,8 +346,12 @@ void *handle_client(void *threadClientIdarg) {
     
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
+<<<<<<< HEAD
     int messageid, connected = 1, i = 0;
 
+=======
+    int messageid, connected = 1;
+>>>>>>> 83c170676b3331ea7c496df77ff757c0e9f24c78
     pthread_t tid = pthread_self();
     
 //    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port

@@ -127,7 +127,7 @@ void *buffRead(int size, struct SocketBuffer *buff)
     return ptr;
 }
 
-void buffWrite(void *ptr, int size, struct SocketBuffer *buff)
+void buffWrite(void *ptr, ssize_t size, struct SocketBuffer *buff)
 {
     char *oldbuff;
     //Aloc the necessary amount of memory + margin
@@ -166,8 +166,8 @@ double readDouble(struct SocketBuffer *buff)
 char *readString(struct SocketBuffer *buff)
 {
     char now;
-    int initialPos=buff->pos;
-    int size;
+    ssize_t initialPos=buff->pos;
+    ssize_t size;
     char *retval;
     
     now = buff->buffer[buff->pos];
@@ -257,7 +257,7 @@ void sendResp(struct SocketBuffer *buff, int ns)
     
     startBuffer(&sendBuff);
     clearBuffer(&sendBuff);
-    writeInt(buff->pos, &sendBuff);
+    writeInt((int)buff->pos, &sendBuff);
     buffWrite((void*)buff->buffer, buff->pos, &sendBuff);
     
     totalToSend = sendBuff.pos;
@@ -566,7 +566,7 @@ void *P2Sender(void * P2Messagearg)
 void *clientOperation(void *param)
 {
     int option,i, choice, tempSize;
-    char nome[50],phone[50];
+    char nome[50],phone[PHONE_SIZE];
     struct SocketBuffer myBuff;
     startBuffer(&myBuff);
     clearBuffer(&myBuff);
