@@ -346,7 +346,12 @@ void *handle_client(void *threadClientIdarg) {
     
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
+<<<<<<< HEAD
+    int messageid, connected = 1, i = 0;
+
+=======
     int messageid, connected = 1;
+>>>>>>> 83c170676b3331ea7c496df77ff757c0e9f24c78
     pthread_t tid = pthread_self();
     
 //    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port
