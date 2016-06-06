@@ -599,10 +599,10 @@ void *clientOperation(void *param)
                 {
                    if (myGroups[i].active==0)
                    {
-                       strcpy(myGroups[i].contacts[0].name,serverOnlineClients[choice].name);
-                       strcpy(myGroups[i].contacts[0].phone,serverOnlineClients[choice].phone);
+                       strcpy(myGroups[i].contacts[0].name, serverOnlineClients[choice].name);
+                       strcpy(myGroups[i].contacts[0].phone, serverOnlineClients[choice].phone);
                        myGroups[i].size = 1;
-                       myGroups[i].active=1;
+                       myGroups[i].active = 1;
                        break;
                    }
                 }
