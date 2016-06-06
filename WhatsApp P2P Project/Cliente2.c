@@ -414,7 +414,7 @@ void *handle_client(void *threadClientIdarg)
     int fileSize=0;
     while (connected)
     {
-        printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
+        //printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
         
         recvResp(buffer, onlineClients[threadClientId].socket);
         
@@ -464,7 +464,7 @@ void *handle_client(void *threadClientIdarg)
                 strcat(lastMessages[LASTMESSAGE],sender);
                 strcat(lastMessages[LASTMESSAGE]," / ");
                 strcat(lastMessages[LASTMESSAGE],phone);
-                strcat(lastMessages[LASTMESSAGE],"Image Sent, saved in:");
+                strcat(lastMessages[LASTMESSAGE],"Image Received, saved in:");
                 strcat(lastMessages[LASTMESSAGE],"photo.png");
                 strcat(lastMessages[LASTMESSAGE],"\n");
                 
@@ -545,7 +545,7 @@ void *serverReceiver(void *param)
 
 void *clientOperation(void *param)
 {
-    int option,i;
+    int option,i, choice, tempSize;
     char nome[50],phone[50];
     struct SocketBuffer myBuff;
     startBuffer(&myBuff);
@@ -568,7 +568,7 @@ void *clientOperation(void *param)
     {
       //espera ateh receber ack pela thread de recv
     }
-    printf("Sucessfuly connected to the server.");
+    printf("Successfuly connected to the server.");
     //serverSocket
     while (operational)
     {
@@ -577,11 +577,82 @@ void *clientOperation(void *param)
         switch(option)
         {
             case OP_ADDCONTACT:
+                printf("ID - Nome - Phone");
+                for (i=0;i<usersOnline;i++)
+                {
+                    printf("%d - %s - %s",i,serverOnlineClients[i].name,serverOnlineClients[i].phone);
+                }
+                printf("Entre com o ID do usuario que gostaria de adicionar");
+                scanf("%d", &choice);
+                if (choice>usersOnline)
+                {
+                    printf("id invalido\n");
+                    continue;
+                }
+                if (serverOnlineClients[choice].readyForCommunication==0)
+                {
+                    printf("id invalido\n");
+                    continue;
+                }
+                
+                for (i=0;i<MAXGROUPS;i++)
+                {
+                   if (myGroups[i].active==0)
+                   {
+                       strcpy(myGroups[i].contacts[0].name,serverOnlineClients[choice].name);
+                       strcpy(myGroups[i].contacts[0].phone,serverOnlineClients[choice].phone);
+                       myGroups[i].size = 1;
+                       myGroups[i].active=1;
+                       break;
+                   }
+                }
+                printf("Contato Adicionado!\n");
                 //Envia msg pedindo users
                 
                 break;
             case OP_MAKEGROUP:
-                //Envia msg pedindo users
+                
+                for (i=0;i<MAXGROUPS;i++)
+                {
+                    if (myGroups[i].active==1 && myGroups[i].size==1)
+                    {
+                        printf("%d %s %s",i,myGroups[i].contacts[0].name,myGroups[i].contacts[0].phone);
+                    }
+                }
+                tempSize=0;
+                for (i=0;i<MAXGROUPS;i++)
+                {
+                    if (myGroups[i].active==0)
+                    {
+                        choice = 0;
+                        printf("Digite o id do usuario que quer adicionar ao novo grupo, digite -1 para voltar\n");
+                        while(choice!=-1 && tempSize < MAXGROUPCONTACT)
+                        {
+                            scanf("%d",&choice);
+                            if (choice>usersOnline)
+                            {
+                                printf("id invalido\n");
+                                continue;
+                            }
+                            if (serverOnlineClients[choice].readyForCommunication==0)
+                            {
+                                printf("id invalido\n");
+                                continue;
+                            }
+                            if (choice!= -1)
+                            {
+                                strcpy(myGroups[i].contacts[tempSize].name, myGroups[choice].contacts[0].name);
+                                strcpy(myGroups[i].contacts[tempSize].phone, myGroups[choice].contacts[0].phone);
+                                tempSize++;
+                                printf("Digite o id do proximo usuario, digite -1 para voltar\n");
+                            }
+                        }
+                        if (tempSize>0)
+                            myGroups[i].active = 1;
+                        
+                    }
+                }
+                
                 
                 break;
             case OP_SENDMESSAGE:
