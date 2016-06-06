@@ -245,7 +245,7 @@ void recvResp(struct SocketBuffer *buff, int ns)
         buff->buffer = (char*) malloc (buff->pos + bytesToReceive + BUFFMARGIN);
         memcpy(buff->buffer, oldbuff, buff->size);
         free(oldbuff);
-        buff->size = buff->pos + bytesToReceive + BUFFMARGIN;
+        buff->size = buff->pos + (int)bytesToReceive + BUFFMARGIN;
     }
     
     //recebe pacote
@@ -348,17 +348,16 @@ void *handle_client(void *threadClientIdarg) {
     
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
-    int connected = 1;
+    int messageid, connected = 1, i = 0;
+    char recvbuf[TAM_BUF];
     pthread_t tid = pthread_self();
     
-    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port
-    struct in_addr sourceIP = onlineClients[threadClientId].client.sin_addr; //source IP address
+//    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port
+//    struct in_addr sourceIP = onlineClients[threadClientId].client.sin_addr; //source IP address
     clientSocket = onlineClients[threadClientId].socket;
     struct sockaddr_in client = onlineClients[threadClientId].client;
     struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
     
-    int messageid;
-    int i=0;
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     
     pthread_create(&thread_id, NULL, updateClient, (void *)&threadClientId); //cria a thread
@@ -455,7 +454,7 @@ int main(int argc, const char * argv[]) {
     server.sin_port   = htons(port);
     server.sin_addr.s_addr = INADDR_ANY;
     
-    /*
+    /*b
      * Liga o servidor à porta definida anteriormente.
      */
     if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0)  {
