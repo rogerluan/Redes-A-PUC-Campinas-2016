@@ -323,7 +323,7 @@ void *updateClient(void *myClientarg)
     clearBuffer(buffer);
     while(onlineClients[myClient].active==1)
     {
-        usleep(5000000);
+        usleep(2000000);
             printf("Updating User Base\n");
             int onlineUsers=0;
             for(i=0;i<MAX_ONLINE_USERS; i++)
