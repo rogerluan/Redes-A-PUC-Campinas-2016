@@ -904,7 +904,7 @@ void *clientOperation(void *param)
                 {
                     if (myGroups[i].active==1 && myGroups[i].size==1)
                     {
-                        printf("ID %d Nome: %s Fone: %s", i, myGroups[i].contacts[0].name, myGroups[i].contacts[0].phone);
+                        printf("ID %d Nome: %s Fone: %s\n", i, myGroups[i].contacts[0].name, myGroups[i].contacts[0].phone);
                     }
                 }
                 tempSize=0;
