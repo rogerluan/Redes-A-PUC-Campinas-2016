@@ -397,7 +397,7 @@ void printMenu() {
  *  Method to be executed every time a new thread is created. A new thread is
  *  being created every time a new client requests for a connection.
  *
- *  @param client_connection Client connection pointer of type Client.
+ *  @param threadClientIdarg Thread client ID
  */
 void *handle_client(void *threadClientIdarg)
 {
@@ -591,7 +591,7 @@ void *P2Sender(void * P2Messagearg)
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
 
     sendResp(message->buffer, newOpenedSocket);
-    usleep(50000000);
+    usleep(5000000);
     close(newOpenedSocket);
     closeBuffer(message->buffer);
     free(message);
