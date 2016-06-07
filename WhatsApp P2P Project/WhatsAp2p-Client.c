@@ -430,7 +430,7 @@ void *handle_client(void *threadClientIdarg)
     pthread_t tid = pthread_self();
     
     clientSocket = onlineClients[threadClientId].socket;
-//    struct sockaddr_in client = onlineClients[threadClientId].client;
+    //    struct sockaddr_in client = onlineClients[threadClientId].client;
     struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
     
     int messageid;
@@ -438,7 +438,6 @@ void *handle_client(void *threadClientIdarg)
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     char *sender, *phone, *msg, *file;
     int fileSize=0;
-
     if (recvResp(buffer, onlineClients[threadClientId].socket)==-1)
     {
         printf("RECV Errror\n");
@@ -452,6 +451,7 @@ void *handle_client(void *threadClientIdarg)
     switch (messageid)
     {
         case TEXT_MESSAGE:
+        {
             printf("TEXT MESSAGE \n");
             sender = readString(buffer);
             phone = readString(buffer);
@@ -473,9 +473,11 @@ void *handle_client(void *threadClientIdarg)
             free(msg);
             //printMenu();
             break;
+        }
         case IMAGE_MESSAGE:
+        {
             printf("IMAGE MESSAGE \n");
-            ;char cwd[1024];
+            char cwd[1024];
             char *fileName;
             char fileNameRecv[400];
             char fileNameOpen[400];
@@ -530,9 +532,12 @@ void *handle_client(void *threadClientIdarg)
             free(sender);
             free(phone);
             break;
+        }
         default:
+        {
             printf("Thread[%u]: Comando de código %d desconhecido.\n", (unsigned)tid, messageid);
-        break;
+            break;
+        }
     }
     printf("Mensagem Recebida, atualize a tela\n");
     
@@ -593,10 +598,8 @@ void *serverReceiver(void *param)
                 
         }
     }
-    
     closeBuffer(&myBuff);
     pthread_exit(0);
-    
 }
 
 /**
@@ -606,11 +609,12 @@ void *serverReceiver(void *param)
  *
  *  @return Returns 1 if operation succeeds, otherwise 0.
  */
-bool saveBufferToFile(struct SocketBuffer *buffer) {
-    
+bool saveBufferToFile(struct SocketBuffer *buffer)
+{
     bool operationSucceed = true, triedCreating = false;
     
-    if (!buffer || buffer == NULL) {
+    if (!buffer || buffer == NULL)
+    {
         return !operationSucceed;
     }
     
@@ -620,9 +624,11 @@ bool saveBufferToFile(struct SocketBuffer *buffer) {
         //try to open the contacts book file
         contactsBook = fopen("contactsBook.amiguinhos", "r+");
         
-        if (!contactsBook) { //unsuccess case
+        if (!contactsBook)
+        { //unsuccess case
             // try to create the contacts book file
-            if (!triedCreating) {
+            if (!triedCreating)
+            {
                 triedCreating = true;
                 fclose(fopen("contactsBook.amiguinhos", "w"));
             } else {
@@ -637,18 +643,25 @@ bool saveBufferToFile(struct SocketBuffer *buffer) {
     
     fwrite(buffer->buffer, 1, buffer->size, contactsBook);
     
-    if (contactsBook) {
+    if (contactsBook)
+    {
         fclose(contactsBook);
     }
     
     return operationSucceed;
 }
 
-void readGroupsFromFile()
+/*!
+ *  Reads a previously saved contacts file, and  updates contacts info.
+ *
+ *  @return Returns a buffer containing the groups read from the file, or null if no groups were found.
+ */
+void deserializeGroupsFromFile()
 {
-    int amountGroups = 0,i=0,amountContacts=0,k=0;
+    int amountGroups,amountContacts,i,k;
     char *tempStr;
     struct SocketBuffer returnBuffer;
+    startBuffer(&returnBuffer);
     clearBuffer(&returnBuffer);
     
     FILE *diskFile = fopen("contactsBook.amiguinhos", "rb");
@@ -671,7 +684,6 @@ void readGroupsFromFile()
             
             returnBuffer.buffer = charFile;
             returnBuffer.size = fileSize;
-            
             amountGroups = readInt(&returnBuffer);
             for(i=0;i<amountGroups;i++)
             {
@@ -687,13 +699,11 @@ void readGroupsFromFile()
                     tempStr = readString(&returnBuffer);
                     strcpy(myGroups[i].contacts[k].phone,tempStr);
                     free(tempStr);
-                    
                 }
             }
             closeBuffer(&returnBuffer);
             printf("Contatos Carregados.\n");
             usleep(1000000);
-            
         } else {
             printf("Livro de contatos nao encontrado.\n");
             usleep(1000000);
@@ -702,12 +712,11 @@ void readGroupsFromFile()
         printf("Livro de contatos nao encontrado.\n");
         usleep(1000000);
     }
-    
-    if (diskFile) {
-        fclose(diskFile);
-    }
 }
 
+/*!
+ *  Serialize the current contacts book into a file, to persist locally.
+ */
 void serializeGroupsToFile()
 {
     struct SocketBuffer buffer;
@@ -735,9 +744,9 @@ void serializeGroupsToFile()
             writeInt(myGroups[i].size, &buffer);
             for (k=0;k<myGroups[i].size;k++)
             {
+                writeInt(myGroups[i].size, &buffer);
                 writeString(myGroups[i].contacts[k].name, &buffer);
                 writeString(myGroups[i].contacts[k].phone, &buffer);
-                
             }
         }
     }
@@ -745,11 +754,14 @@ void serializeGroupsToFile()
     closeBuffer(&buffer);
 }
 
-void deserializeFileToGroups()
-{
-    readGroupsFromFile();
-}
-
+/*!
+ *  Connects to a given hostname and port.
+ *
+ *  @param hostnameParam Name of the host. This is automatically translated into IP address using gethostbyname().
+ *  @param port          Port of the host.
+ *
+ *  @return Returns an int value of the socket used in the connection.
+ */
 int connectToServer(const char *hostnameParam, unsigned short port)
 {
     
@@ -828,8 +840,8 @@ void printContacts()
             }
         }
     }
-
-
+    
+    
 }
 
 void *clientOperation(void *param)
@@ -868,7 +880,7 @@ void *clientOperation(void *param)
         scanf("%d", &option);
         switch(option)
         {
-            case OP_ADDCONTACT:
+            case OP_ADDCONTACT: {
                 for (i=0;i<MAXGROUPS;i++)
                 {
                     if (myGroups[i].active==0)
@@ -888,7 +900,8 @@ void *clientOperation(void *param)
                 //Envia msg pedindo users
                 
                 break;
-            case OP_MAKEGROUP:
+            }
+            case OP_MAKEGROUP: {
                 for (i=0;i<MAXGROUPS;i++)
                 {
                     if (myGroups[i].active==1 && myGroups[i].size==1)
@@ -933,7 +946,8 @@ void *clientOperation(void *param)
                     }
                 }
                 break;
-            case OP_SENDMESSAGE:
+            }
+            case OP_SENDMESSAGE: {
                 
                 printContacts();
                 printf("Escolha o ID pra quem enviar a mensagem:");
@@ -990,7 +1004,8 @@ void *clientOperation(void *param)
                 }
                 usleep(2000000);
                 break;
-            case OP_SENDIMAGE:
+            }
+            case OP_SENDIMAGE: {
                 
                 printContacts();
                 printf("Escolha o ID pra quem enviar a mensagem:");
@@ -1081,24 +1096,27 @@ void *clientOperation(void *param)
                 usleep(5000000);
                 free(file);
                 break;
-            case OP_UPDATESCREEN:
+            }
+            case OP_UPDATESCREEN: {
                 //do nothing actually, screen will be redarawn on the top of this while
                 break;
-            case OP_LEAVE:
+            }
+            case OP_LEAVE: {
                 serializeGroupsToFile();
                 
                 clearBuffer(&myBuff);
                 writeByte(DISCONNECT_REQUEST, &myBuff);
                 sendResp(&myBuff, serverSocket);
-                
+
                 printf("Saindo...\n");
-                usleep(2000000);
+                usleep(1000000);
                 exit(0);
                 break;
-            default:
+            }
+            default: {
                 printf("Erro, comando nao reconhecido");
                 break;
-                
+            }
         }
         
     }
@@ -1133,7 +1151,7 @@ int main(int argc, const char * argv[])
         myGroups[i].active = 0;
         myGroups[i].size = 0;
     }
-    deserializeFileToGroups();
+    deserializeGroupsFromFile();
     
     
     pthread_mutex_init(&mutex, NULL);
