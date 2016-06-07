@@ -181,7 +181,7 @@ char *readString(struct SocketBuffer *buff)
         now = buff->buffer[buff->pos];
     }
     if (now=='\0')
-        buff->pos++;//teste
+        buff->pos++;
     
     size = buff->pos-initialPos;
     retval = (char*)malloc(size);
@@ -286,7 +286,6 @@ void sendResp(struct SocketBuffer *buff, int ns)
 int recvResp(struct SocketBuffer *buff, int ns)
 {
     char *oldbuff;
-    int hops=0;
     ssize_t bytesToReceive = 0, bytesReceived, totalBytesReceived = 0, sizeToReceive = 0;
     clearBuffer(buff);
     
@@ -322,7 +321,7 @@ int recvResp(struct SocketBuffer *buff, int ns)
     //recebe pacote
     totalBytesReceived = 0;
     bytesReceived = 0;
-    while (bytesReceived < bytesToReceive)
+    while (totalBytesReceived < bytesToReceive)
     {
         bytesReceived = recv(ns, buff->buffer + totalBytesReceived, bytesToReceive - totalBytesReceived, 0);
         if (bytesReceived  == -1)
@@ -331,12 +330,6 @@ int recvResp(struct SocketBuffer *buff, int ns)
             return -1;
         }
         totalBytesReceived += bytesReceived;
-        hops++;
-        if (hops>1)
-        {
-            printf("RC %zd - TRC %zd\n", bytesReceived, bytesToReceive);
-            usleep(1000000);
-        }
     }
     return 1;
 }
@@ -435,7 +428,7 @@ void *handle_client(void *threadClientIdarg)
     
     int messageid;
     int i=0;
-    printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
+    //printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     char *sender, *phone, *msg, *file;
     int fileSize=0;
     if (recvResp(buffer, onlineClients[threadClientId].socket)==-1)
@@ -452,7 +445,7 @@ void *handle_client(void *threadClientIdarg)
     {
         case TEXT_MESSAGE:
         {
-            printf("TEXT MESSAGE \n");
+            //printf("TEXT MESSAGE \n");
             sender = readString(buffer);
             phone = readString(buffer);
             msg = readString(buffer);
@@ -476,7 +469,7 @@ void *handle_client(void *threadClientIdarg)
         }
         case IMAGE_MESSAGE:
         {
-            printf("IMAGE MESSAGE \n");
+            //printf("IMAGE MESSAGE \n");
             char cwd[1024];
             char *fileName;
             char fileNameRecv[400];
@@ -485,7 +478,7 @@ void *handle_client(void *threadClientIdarg)
             sender = readString(buffer);
             phone = readString(buffer);
             fileSize = readInt(buffer);
-            printf("FileSize to Receive: %d\n",fileSize);
+            //printf("FileSize to Receive: %d\n",fileSize);
             file = readFile(fileSize, buffer);
             fileName = readString(buffer);
             strcpy(fileNameRecv,"recv");
@@ -656,13 +649,12 @@ bool saveBufferToFile(struct SocketBuffer *buffer)
  *
  *  @return Returns a buffer containing the groups read from the file, or null if no groups were found.
  */
-void deserializeGroupsFromFile()
+void readGroupsFromFile()
 {
-    int amountGroups,amountContacts,i,k;
+    int amountGroups = 0,i=0,amountContacts=0,k=0;
     char *tempStr;
     struct SocketBuffer returnBuffer;
-    startBuffer(&returnBuffer);
-    clearBuffer(&returnBuffer);
+    
     
     FILE *diskFile = fopen("contactsBook.amiguinhos", "rb");
     size_t fileSize;
@@ -684,12 +676,15 @@ void deserializeGroupsFromFile()
             
             returnBuffer.buffer = charFile;
             returnBuffer.size = fileSize;
+            returnBuffer.pos = 0;
+            
             amountGroups = readInt(&returnBuffer);
+            printf("Amount of groups: %d \n",amountGroups);
             for(i=0;i<amountGroups;i++)
             {
                 amountContacts = readInt(&returnBuffer);
-                myGroups[i].size = amountContacts;
                 myGroups[i].active = 1;
+                myGroups[i].size = amountContacts;
                 for (k=0; k<amountContacts; k++)
                 {
                     tempStr = readString(&returnBuffer);
@@ -704,6 +699,7 @@ void deserializeGroupsFromFile()
             closeBuffer(&returnBuffer);
             printf("Contatos Carregados.\n");
             usleep(1000000);
+            
         } else {
             printf("Livro de contatos nao encontrado.\n");
             usleep(1000000);
@@ -711,6 +707,10 @@ void deserializeGroupsFromFile()
     } else {
         printf("Livro de contatos nao encontrado.\n");
         usleep(1000000);
+    }
+    
+    if (diskFile) {
+        fclose(diskFile);
     }
 }
 
@@ -727,12 +727,9 @@ void serializeGroupsToFile()
     
     for (i=0;i<MAXGROUPS;i++)
     {
-        if (myGroups[i].active==1)
+        if (myGroups[i].active==1 && myGroups[i].size>0)
         {
-            for (k=0;k<myGroups[i].size;k++)
-            {
-                numberOfGroups++;
-            }
+            numberOfGroups++;
         }
     }
     
@@ -744,12 +741,12 @@ void serializeGroupsToFile()
             writeInt(myGroups[i].size, &buffer);
             for (k=0;k<myGroups[i].size;k++)
             {
-                writeInt(myGroups[i].size, &buffer);
                 writeString(myGroups[i].contacts[k].name, &buffer);
                 writeString(myGroups[i].contacts[k].phone, &buffer);
             }
         }
     }
+    printf("Pos: %zd - size %zd =====\n",buffer.pos, buffer.size);
     saveBufferToFile(&buffer);
     closeBuffer(&buffer);
 }
@@ -801,14 +798,14 @@ int connectToServer(const char *hostnameParam, unsigned short port)
 void *P2Sender(void * P2Messagearg)
 {
     struct P2Message *message = (struct P2Message*)P2Messagearg;
-    printf("Sender Thread Started\n");
+    //printf("Sender Thread Started\n");
     usleep(rand()%1000000);
     //abre conexao tcp com message.listenport / message.listenip
-    printf("Opening connection\n");
+    //printf("Opening connection\n");
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
-    printf("Sending\n");
+    //printf("Sending\n");
     sendResp(message->buffer, newOpenedSocket);
-    printf("Sent\n");
+    //printf("Sent\n");
     usleep(100000000);
     close(newOpenedSocket);
     closeBuffer(message->buffer);
@@ -877,6 +874,7 @@ void *clientOperation(void *param)
     while (operational)
     {
         printMenu();
+        fpurge(stdin);
         scanf("%d", &option);
         switch(option)
         {
@@ -906,7 +904,7 @@ void *clientOperation(void *param)
                 {
                     if (myGroups[i].active==1 && myGroups[i].size==1)
                     {
-                        printf("%d %s %s", i, myGroups[i].contacts[0].name, myGroups[i].contacts[0].phone);
+                        printf("ID %d Nome: %s Fone: %s", i, myGroups[i].contacts[0].name, myGroups[i].contacts[0].phone);
                     }
                 }
                 tempSize=0;
@@ -1040,7 +1038,7 @@ void *clientOperation(void *param)
                     usleep(1000000);
                     break;
                 }
-                printf("File size: %zu\n",sz);
+                //printf("File size: %zu\n",sz);
                 char *file;
                 file = (char*)malloc(sz);
                 
@@ -1080,7 +1078,7 @@ void *clientOperation(void *param)
                                 writeInt((int)sz,message->buffer);
                                 buffWrite(file,sz,message->buffer);
                                 writeString(text,message->buffer);
-                                printf("OPE creating sender thread\n");
+                                //printf("OPE creating sender thread\n");
                                 pthread_create(&thread_id, NULL, P2Sender, (void*)message);
                                 
                                 break;
@@ -1093,7 +1091,7 @@ void *clientOperation(void *param)
                         }
                     }
                 }
-                usleep(5000000);
+                usleep(2000000);
                 free(file);
                 break;
             }
@@ -1151,7 +1149,8 @@ int main(int argc, const char * argv[])
         myGroups[i].active = 0;
         myGroups[i].size = 0;
     }
-    deserializeGroupsFromFile();
+    
+    readGroupsFromFile();
     
     
     pthread_mutex_init(&mutex, NULL);

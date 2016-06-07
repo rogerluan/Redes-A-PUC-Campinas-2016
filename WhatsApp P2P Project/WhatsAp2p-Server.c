@@ -256,7 +256,7 @@ int recvResp(struct SocketBuffer *buff, int ns)
     //recebe pacote
     totalBytesReceived = 0;
     bytesReceived = 0;
-    while (bytesReceived < bytesToReceive)
+    while (totalBytesReceived < bytesToReceive)
     {
         bytesReceived = recv(ns, buff->buffer + totalBytesReceived, bytesToReceive - totalBytesReceived, 0);
         if (bytesReceived  == -1)
@@ -270,6 +270,8 @@ int recvResp(struct SocketBuffer *buff, int ns)
 }
 
 
+
+
 void clearClient(Client *client)
 {
     client->socket = -1;
@@ -278,6 +280,9 @@ void clearClient(Client *client)
     clearBuffer(&(client->buffer));
     client->active=0;
     client->readyForCommunication = 0;
+    client->phone=NULL;
+    client->name=NULL;
+    client->listenIpAddress=NULL;
 }
 
 void disconnectClient(Client *client)
@@ -285,9 +290,14 @@ void disconnectClient(Client *client)
 //    shutdown(client->socket);
 	client->readyForCommunication = 0;
     close(client->socket);
-    free(client->phone);
-    free(client->name);
-    free(client->listenIpAddress);
+    
+    if (client->phone!=NULL)
+        free(client->phone);
+    if (client->name!=NULL)
+        free(client->name);
+    if (client->listenIpAddress!=NULL)
+        free(client->listenIpAddress);
+    
     client->socket = -1;
     client->listenPort = -1;
     startBuffer(&(client->buffer));
