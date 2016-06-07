@@ -131,11 +131,15 @@ char *readString(struct SocketBuffer *buff)
         buff->pos++;
         now = buff->buffer[buff->pos];
     }
+    if (now=='\0')
+        buff->pos++;//teste
     
     size = buff->pos-initialPos;
     retval = (char*)malloc(size);
     memcpy(retval, &buff->buffer[initialPos], size);
-    buff->pos++;
+    //buff->pos++;
+    if (buff->pos > buff->size-1)
+        buff->pos = buff->size-1;
     return retval;
 }
 
