@@ -79,7 +79,7 @@ struct SocketBuffer
 struct P2Message
 {
     struct SocketBuffer *buffer;
-    char *listenIpAddress;
+    char listenIpAddress[15];
     unsigned short listenPort;
 };
 
@@ -370,6 +370,7 @@ int operational;
 int usersOnline=0;
 char lastMessages[LASTMESSAGE+1][140];
 int dontStartOperations;
+char myName[50], myPhone[PHONE_SIZE];
 /////////// - Other Functions
 
 void printMenu() {
@@ -415,13 +416,10 @@ void *handle_client(void *threadClientIdarg)
     
     int messageid;
     int i=0;
-    printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
+    //printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     char *sender, *phone, *msg, *file;
     int fileSize=0;
-    while (connected)
-    {
-        //printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
-        
+    
         recvResp(buffer, onlineClients[threadClientId].socket);
         
         messageid = readByte(buffer);
@@ -433,6 +431,7 @@ void *handle_client(void *threadClientIdarg)
                 sender = readString(buffer);
                 phone = readString(buffer);
                 msg = readString(buffer);
+                //printf("%s %s %s\n",sender,phone,msg);
                 for(i=1;i<LASTMESSAGE+1;i++)
                 {
                     strcpy(lastMessages[i-1], lastMessages[i]);
@@ -450,12 +449,14 @@ void *handle_client(void *threadClientIdarg)
                 //printMenu();
                 break;
             case IMAGE_MESSAGE:
+                ;char cwd[1024];
+                getcwd(cwd, sizeof(cwd));
                 sender = readString(buffer);
                 phone = readString(buffer);
                 fileSize = readInt(buffer);
                 file = readFile(fileSize, buffer);
                 
-                FILE *diskFile= fopen("photo.png", "wb");
+                FILE *diskFile= fopen("photorecv.png", "wb");
                 if (diskFile!=NULL)
                 {
                     fwrite(file, 0, fileSize, diskFile);
@@ -471,7 +472,8 @@ void *handle_client(void *threadClientIdarg)
                 strcat(lastMessages[LASTMESSAGE], " / ");
                 strcat(lastMessages[LASTMESSAGE], phone);
                 strcat(lastMessages[LASTMESSAGE], "Image Received, saved in:");
-                strcat(lastMessages[LASTMESSAGE], "photo.png");
+                strcat(lastMessages[LASTMESSAGE], cwd);
+                strcat(lastMessages[LASTMESSAGE], "photorecv.png");
                 strcat(lastMessages[LASTMESSAGE], "\n");
                 
                 free(file);
@@ -480,15 +482,12 @@ void *handle_client(void *threadClientIdarg)
                 break;
             default:
             {
-                printf("Thread[%u]: Comando de código %d desconhecido. Enviando resposta ao cliente da porta %d\n", (unsigned)tid, messageid, ntohs(client.sin_port));
-                
-                //to-do: implementar este método
-                //                sendResp(sendbuf, clientSocket, invalido);
+                printf("Thread[%u]: Comando de código %d desconhecido.\n", (unsigned)tid, messageid);
                 break;
             }
         }
-    }
-    
+    usleep(5000000);
+    disconnectClient(&onlineClients[threadClientId]);
     pthread_exit(0);
 }
 
@@ -507,12 +506,12 @@ void *serverReceiver(void *param)
         switch (messageid)
         {
             case CONNECTION_REQUEST:
-                printf("Sucessfuly connected to the server.");
+                printf("Sucessfuly connected to the server.\n");
                 dontStartOperations=0;
                 break;
             
             case UPDATE_REQUEST:
-                
+                //printf("Receiving Users.\n");
                 for (i=0;i<MAX_ONLINE_USERS;i++)
                 {
                     if (serverOnlineClients[i].readyForCommunication!=0)
@@ -530,6 +529,7 @@ void *serverReceiver(void *param)
                     serverOnlineClients[i].listenIpAddress = readString(&myBuff);
                     serverOnlineClients[i].listenPort = readShort(&myBuff);
                     serverOnlineClients[i].readyForCommunication = 1;
+                    //printf("%s, %s, %s, %hu\n",serverOnlineClients[i].name,serverOnlineClients[i].phone,serverOnlineClients[i].listenIpAddress,serverOnlineClients[i].listenPort);
                 }
                 break;
         
@@ -586,13 +586,16 @@ void *P2Sender(void * P2Messagearg)
 {
     struct P2Message *message = (struct P2Message*)P2Messagearg;
     
+    usleep(rand()%10000);
     //abre conexao tcp com message.listenport / message.listenip
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
-    
+
     sendResp(message->buffer, newOpenedSocket);
     usleep(5000000);
     close(newOpenedSocket);
-
+    closeBuffer(message->buffer);
+    free(message);
+    
     pthread_exit(0);
 }
 
@@ -600,20 +603,23 @@ void *P2Sender(void * P2Messagearg)
 void *clientOperation(void *param)
 {
     int option, i, choice, tempSize;
-    char nome[50], phone[PHONE_SIZE];
     struct SocketBuffer myBuff;
+    char text[100];
+    struct P2Message *message;
+    int k=0,choiceid=0;
+    
     startBuffer(&myBuff);
     clearBuffer(&myBuff);
     printf("Digite seu nome:\n");
-    gets(nome);
+    gets(myName);
     printf("Digite seu telefone:\n");
-    gets(phone);
+    gets(myPhone);
     
     startBuffer(&myBuff);
     clearBuffer(&myBuff);
     writeByte(CONNECTION_REQUEST, &myBuff);
-    writeString(nome, &myBuff);
-    writeString(phone, &myBuff);
+    writeString(myName, &myBuff);
+    writeString(myPhone, &myBuff);
     writeString(myIp, &myBuff);
     writeShort(port, &myBuff);
     sendResp(&myBuff, serverSocket);
@@ -636,8 +642,10 @@ void *clientOperation(void *param)
                    if (myGroups[i].active==0)
                    {
                        printf("Digite o nome do amiguinho \n");
+                       fpurge(stdin);
                        gets(myGroups[i].contacts[0].name);
                        printf("Digite o telefone do amiguinho \n");
+                       fpurge(stdin);
                        gets(myGroups[i].contacts[0].phone);
                        myGroups[i].size = 1;
                        myGroups[i].active = 1;
@@ -681,6 +689,7 @@ void *clientOperation(void *param)
                             {
                                 strcpy(myGroups[i].contacts[tempSize].name, myGroups[choice].contacts[0].name);
                                 strcpy(myGroups[i].contacts[tempSize].phone, myGroups[choice].contacts[0].phone);
+                                myGroups[i].size++;
                                 tempSize++;
                                 printf("Digite o id do proximo usuario, digite -1 para voltar\n");
                             }
@@ -689,23 +698,194 @@ void *clientOperation(void *param)
                         {
                             myGroups[i].active = 1;
                         }
+                        break;
                     }
                 }
                 break;
             case OP_SENDMESSAGE:
-                ;
-                char text[100];
-                struct P2Message *message= (struct P2Message*)malloc(sizeof(struct P2Message));
-                message->buffer = (struct SocketBuffer*)malloc(sizeof(struct SocketBuffer));
-                startBuffer(message->buffer);
-                clearBuffer(message->buffer);
+                
+                for (i=0;i<MAXGROUPS;i++)
+                {
+                    if (myGroups[i].active==1)
+                    {
+                        if (myGroups[i].size>1)
+                        {
+                            printf("//================\nGrupo ID: %d\n",i);
+                            for(k=0;k<myGroups[i].size;k++)
+                            {
+                                printf("Nome: %s - Fone %s\n",myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
+                            }
+                            printf("//================\n");
+                        }
+                        else
+                        {
+                            printf("Contato ID: %d -Nome: %s - Fone %s\n",i,myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
+                        }
+                    }
+                }
+                printf("Escolha o ID pra quem enviar a mensagem:");
+                scanf("%d",&choiceid);
+                
+                if (choiceid>MAXGROUPS)
+                {
+                    printf("Receptor Invalido\n");
+                    break;
+                }
+                if (myGroups[choiceid].active!=1)
+                {
+                    printf("Receptor Invalido\n");
+                    break;
+                }
+                
                 printf("Digite sua mensagem:");
+                fpurge(stdin);
                 gets(text);
                 
+                for(k=0;k<myGroups[choiceid].size;k++)
+                {
+                    for(i=0;i<MAX_ONLINE_USERS;i++)
+                    {
+                        if (serverOnlineClients[i].readyForCommunication==1)
+                        {
+                            if (strcmp(myGroups[choiceid].contacts[k].phone,serverOnlineClients[i].phone)==0)
+                            {
+                                //found match
+                                printf("Enviando mensagem para: %s\n",myGroups[choiceid].contacts[k].name);
+                                
+                                 message = (struct P2Message*)malloc(sizeof(struct P2Message));
+                                 message->buffer = (struct SocketBuffer*)malloc(sizeof(struct SocketBuffer));
+                                 strcpy(message->listenIpAddress,serverOnlineClients[i].listenIpAddress);
+                                 message->listenPort = serverOnlineClients[i].listenPort;
+                                 startBuffer(message->buffer);
+                                 clearBuffer(message->buffer);
+                                 writeByte(TEXT_MESSAGE,message->buffer);
+                                 writeString(myName,message->buffer);
+                                 writeString(myPhone,message->buffer);
+                                 writeString(text,message->buffer);
+                                
+                                 pthread_create(&thread_id, NULL, P2Sender, (void*)message);
+                                
+                                break;
+                            }
+                        }
+                        if (i==MAX_ONLINE_USERS-1)
+                        {
+                            printf("Usuario: %s nao esta online\n",myGroups[choiceid].contacts[k].name);
+                            break;
+                        }
+                    }
+                }
+                usleep(2000000);
                 break;
             case OP_SENDIMAGE:
-                //Envia msg pedindo users
                 
+                for (i=0;i<MAXGROUPS;i++)
+                {
+                    if (myGroups[i].active==1)
+                    {
+                        if (myGroups[i].size>1)
+                        {
+                            printf("//================\nGrupo ID: %d\n",i);
+                            for(k=0;k<myGroups[i].size;k++)
+                            {
+                                printf("Nome: %s - Fone %s\n",myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
+                            }
+                            printf("//================\n");
+                        }
+                        else
+                        {
+                            printf("Contato ID: %d -Nome: %s - Fone %s\n",i,myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
+                        }
+                    }
+                }
+                printf("Escolha o ID pra quem enviar a mensagem:");
+                scanf("%d",&choiceid);
+                
+                if (choiceid>MAXGROUPS)
+                {
+                    printf("Receptor Invalido\n");
+                    usleep(1000000);
+                    break;
+                }
+                if (myGroups[choiceid].active!=1)
+                {
+                    printf("Receptor Invalido\n");
+                    usleep(1000000);
+                    break;
+                }
+                char cwd[1024];
+                getcwd(cwd, sizeof(cwd));
+                printf("%s \n",cwd);
+                
+                printf("Digite o caminho do arquivo:\n");
+                fpurge(stdin);
+                gets(text);
+                
+                FILE *diskFile = fopen(text, "rb");
+                size_t sz;
+                if (diskFile!=NULL)
+                {
+                    fseek(diskFile, 0L, SEEK_END);
+                    sz = ftell(diskFile);
+                    fclose(diskFile);
+                }else{
+                    printf("arquivo invalido \n");
+                    usleep(1000000);
+                    break;
+                }
+                
+                char *file;
+                file = (char*)malloc(sz);
+                
+                diskFile = fopen("photo.png", "rb");
+                if (diskFile!=NULL)
+                {
+                    fread(file, 0, sz,diskFile);
+                    fclose(diskFile);
+                }else{
+                    printf("arquivo invalido \n");
+                    usleep(1000000);
+                    break;
+                }
+                
+                
+                for(k=0;k<myGroups[choiceid].size;k++)
+                {
+                    for(i=0;i<MAX_ONLINE_USERS;i++)
+                    {
+                        if (serverOnlineClients[i].readyForCommunication==1)
+                        {
+                            if (strcmp(myGroups[choiceid].contacts[k].phone,serverOnlineClients[i].phone)==0)
+                            {
+                                //found match
+                                printf("Enviando imagem para: %s\n",myGroups[choiceid].contacts[k].name);
+                                
+                                message = (struct P2Message*)malloc(sizeof(struct P2Message));
+                                message->buffer = (struct SocketBuffer*)malloc(sizeof(struct SocketBuffer));
+                                strcpy(message->listenIpAddress,serverOnlineClients[i].listenIpAddress);
+                                message->listenPort = serverOnlineClients[i].listenPort;
+                                startBuffer(message->buffer);
+                                clearBuffer(message->buffer);
+                                writeByte(IMAGE_MESSAGE,message->buffer);
+                                writeString(myName,message->buffer);
+                                writeString(myPhone,message->buffer);
+                                writeInt((int)sz,message->buffer);
+                                buffWrite(file,sz,message->buffer);
+                                
+                                pthread_create(&thread_id, NULL, P2Sender, (void*)message);
+                                
+                                break;
+                            }
+                        }
+                        if (i==MAX_ONLINE_USERS-1)
+                        {
+                            printf("Usuario: %s nao esta online\n",myGroups[choiceid].contacts[k].name);
+                            break;
+                        }
+                    }
+                }
+                usleep(2000000);
+                free(file);
                 break;
             case OP_UPDATESCREEN:
                 //do nothing actually, screen will be redarawn on the top of this while
@@ -734,7 +914,7 @@ void *clientOperation(void *param)
 
 int main(int argc, const char * argv[])
 {
-    unsigned short port;
+    srand(time(NULL));
     struct sockaddr_in client;
     struct sockaddr_in server;
     socklen_t s;                     /* Socket para aceitar conexões */
@@ -762,7 +942,7 @@ int main(int argc, const char * argv[])
     
     //============================================================================================
     //ESCOLHE PORTA E PEGA IP
-    port = (unsigned short)rand() %40000 + 20000; //Portas de 20000 a 60000
+    port = (unsigned short)rand()%40000 + 20000; //Portas de 20000 a 60000
     fprintf(stderr, "Ouvindo Porta: %d porta\n", port);
     
     /*
@@ -878,7 +1058,7 @@ int main(int argc, const char * argv[])
         int *threadClientId = (int*) malloc (sizeof(int));
         (*threadClientId) = nextClientId;
         
-        printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(onlineClients[nextClientId].client.sin_port), onlineClients[nextClientId].socket);
+        //printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(onlineClients[nextClientId].client.sin_port), onlineClients[nextClientId].socket);
         
         pthread_create(&thread_id, NULL, handle_client, (void *)threadClientId); //cria a thread
         
@@ -886,7 +1066,7 @@ int main(int argc, const char * argv[])
         
         if ((int *)thread_id > 0)  
         {
-            printf("Thread filha criada: %u\n", (unsigned) thread_id);
+            //printf("Thread filha criada: %u\n", (unsigned) thread_id);
             pthread_detach(thread_id);
         } else {
             perror("Thread creation!");
