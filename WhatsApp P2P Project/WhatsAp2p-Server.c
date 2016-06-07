@@ -305,11 +305,10 @@ void *updateClient(void *myClientarg)
     struct SocketBuffer *buffer = &buff;
     startBuffer(buffer);
     clearBuffer(buffer);
-    while(onlineClients[myClient].readyForCommunication==1)
+    while(onlineClients[myClient].active==1)
     {
-        myTimer++;
-        if (myTimer==10000)
-        {
+        usleep(2000000);
+            printf("Updating User Base\n");
             int onlineUsers=0;
             for(i=0;i<MAX_ONLINE_USERS; i++)
             {
@@ -318,6 +317,9 @@ void *updateClient(void *myClientarg)
                     onlineUsers++;
                 }
             }
+            if (onlineUsers==0)
+                continue;
+        
             clearBuffer(buffer);
             writeByte(UPDATE_REQUEST, buffer);//MESSAGE ID
             writeInt(onlineUsers, buffer);
@@ -325,6 +327,7 @@ void *updateClient(void *myClientarg)
             {
                 if (onlineClients[i].readyForCommunication==1)
                 {
+                    printf("%s, %s, %s, %hu",onlineClients[i].name,onlineClients[i].phone,onlineClients[i].listenIpAddress,onlineClients[i].listenPort);
                     writeString(onlineClients[i].name, buffer);
                     writeString(onlineClients[i].phone, buffer);
                     writeString(onlineClients[i].listenIpAddress, buffer);
@@ -332,7 +335,7 @@ void *updateClient(void *myClientarg)
                 }
             }
             sendResp(buffer, onlineClients[myClient].socket);
-        }
+        
     }
     closeBuffer(buffer);
     pthread_exit(0);
@@ -346,12 +349,7 @@ void *handle_client(void *threadClientIdarg) {
     
     /* Variaveis exclusivas da thread */
     socklen_t clientSocket;
-<<<<<<< HEAD
     int messageid, connected = 1, i = 0;
-
-=======
-    int messageid, connected = 1;
->>>>>>> 83c170676b3331ea7c496df77ff757c0e9f24c78
     pthread_t tid = pthread_self();
     
 //    unsigned short sourcePort = onlineClients[threadClientId].client.sin_port; //source port
