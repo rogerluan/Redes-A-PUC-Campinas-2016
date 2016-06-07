@@ -283,9 +283,10 @@ void sendResp(struct SocketBuffer *buff, int ns)
 }
 
 //@ns = socket descriptor
-void recvResp(struct SocketBuffer *buff, int ns)
+int recvResp(struct SocketBuffer *buff, int ns)
 {
     char *oldbuff;
+    int hops=0;
     ssize_t bytesToReceive = 0, bytesReceived, totalBytesReceived = 0, sizeToReceive = 0;
     clearBuffer(buff);
     
@@ -299,16 +300,20 @@ void recvResp(struct SocketBuffer *buff, int ns)
         if (bytesReceived  == -1)
         {
             perror("Recv()");
-            exit(6);
+            return -1;
         }
         totalBytesReceived += bytesReceived;
     }
-    
     //Aloca quantidade de espaco necessaria + margem (pra evitar call pro malloc o tempo todo)
     if (buff->pos+bytesToReceive > buff->size)
     {
         oldbuff = buff->buffer;
         buff->buffer = (char*) malloc (buff->pos + bytesToReceive + BUFFMARGIN);
+        if (buff->buffer==NULL)
+        {
+            printf("MALLOCK ERROR\n");
+            exit(0);
+        }
         memcpy(buff->buffer, oldbuff, buff->size);
         free(oldbuff);
         buff->size = buff->pos + bytesToReceive + BUFFMARGIN;
@@ -323,10 +328,17 @@ void recvResp(struct SocketBuffer *buff, int ns)
         if (bytesReceived  == -1)
         {
             perror("Recv()");
-            exit(6);
+            return -1;
         }
         totalBytesReceived += bytesReceived;
+        hops++;
+        if (hops>1)
+        {
+            printf("RC %zd - TRC %zd\n", bytesReceived, bytesToReceive);
+            usleep(1000000);
+        }
     }
+    return 1;
 }
 
 void clearClient(Client *client)
@@ -423,18 +435,24 @@ void *handle_client(void *threadClientIdarg)
     
     int messageid;
     int i=0;
-    //printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
+    printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     char *sender, *phone, *msg, *file;
     int fileSize=0;
 
-    recvResp(buffer, onlineClients[threadClientId].socket);
+    if (recvResp(buffer, onlineClients[threadClientId].socket)==-1)
+    {
+        printf("RECV Errror\n");
+        usleep(10000000);
+        disconnectClient(&onlineClients[threadClientId]);
+        pthread_exit(0);
+    }
     
     messageid = readByte(buffer);
     
     switch (messageid)
     {
         case TEXT_MESSAGE:
-            
+            printf("TEXT MESSAGE \n");
             sender = readString(buffer);
             phone = readString(buffer);
             msg = readString(buffer);
@@ -456,9 +474,11 @@ void *handle_client(void *threadClientIdarg)
             //printMenu();
             break;
         case IMAGE_MESSAGE:
+            printf("IMAGE MESSAGE \n");
             ;char cwd[1024];
             char *fileName;
             char fileNameRecv[400];
+            char fileNameOpen[400];
             getcwd(cwd, sizeof(cwd));
             sender = readString(buffer);
             phone = readString(buffer);
@@ -478,6 +498,18 @@ void *handle_client(void *threadClientIdarg)
             {
                 printf("error salvando arquivo\n");
             }
+            
+            //open the received file
+            #ifdef __linux__
+             strcpy(fileNameOpen,"xdg-open ");           //linux code goes here
+            #elif __APPLE__
+             strcpy(fileNameOpen,"open ");           // mac code goes here
+            #else
+             //won't open file
+            #endif
+            strcat(fileNameOpen,fileNameRecv);
+            system(fileNameOpen);
+            //===================
             
             for(i=1;i<LASTMESSAGE+1;i++)
             {
@@ -641,7 +673,6 @@ void readGroupsFromFile()
             returnBuffer.size = fileSize;
             
             amountGroups = readInt(&returnBuffer);
-            
             for(i=0;i<amountGroups;i++)
             {
                 amountContacts = readInt(&returnBuffer);
@@ -659,7 +690,7 @@ void readGroupsFromFile()
                     
                 }
             }
-            
+            closeBuffer(&returnBuffer);
             printf("Contatos Carregados.\n");
             usleep(1000000);
             
@@ -697,7 +728,6 @@ void serializeGroupsToFile()
     }
     
     writeInt(numberOfGroups, &buffer);
-    
     for (i=0;i<MAXGROUPS;i++)
     {
         if (myGroups[i].active==1)
@@ -759,11 +789,14 @@ int connectToServer(const char *hostnameParam, unsigned short port)
 void *P2Sender(void * P2Messagearg)
 {
     struct P2Message *message = (struct P2Message*)P2Messagearg;
-    usleep(rand()%10000);
+    printf("Sender Thread Started\n");
+    usleep(rand()%1000000);
     //abre conexao tcp com message.listenport / message.listenip
+    printf("Opening connection\n");
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
-    
+    printf("Sending\n");
     sendResp(message->buffer, newOpenedSocket);
+    printf("Sent\n");
     usleep(100000000);
     close(newOpenedSocket);
     closeBuffer(message->buffer);
@@ -1026,13 +1059,13 @@ void *clientOperation(void *param)
                                 startBuffer(message->buffer);
                                 clearBuffer(message->buffer);
                                 writeByte(IMAGE_MESSAGE,message->buffer);
-                                printf("Myname: %s \n",myName);
+                                //printf("Myname: %s \n",myName);
                                 writeString(myName,message->buffer);
                                 writeString(myPhone,message->buffer);
                                 writeInt((int)sz,message->buffer);
                                 buffWrite(file,sz,message->buffer);
                                 writeString(text,message->buffer);
-                                
+                                printf("OPE creating sender thread\n");
                                 pthread_create(&thread_id, NULL, P2Sender, (void*)message);
                                 
                                 break;
@@ -1045,7 +1078,7 @@ void *clientOperation(void *param)
                         }
                     }
                 }
-                usleep(10000000);
+                usleep(5000000);
                 free(file);
                 break;
             case OP_UPDATESCREEN:
@@ -1053,12 +1086,14 @@ void *clientOperation(void *param)
                 break;
             case OP_LEAVE:
                 serializeGroupsToFile();
+                
                 clearBuffer(&myBuff);
                 writeByte(DISCONNECT_REQUEST, &myBuff);
                 sendResp(&myBuff, serverSocket);
                 
-                //SERIALIZA myGroups para um arquivo
-                //exit
+                printf("Saindo...\n");
+                usleep(2000000);
+                exit(0);
                 break;
             default:
                 printf("Erro, comando nao reconhecido");
@@ -1075,7 +1110,7 @@ void *clientOperation(void *param)
 
 int main(int argc, const char * argv[])
 {
-    deserializeFileToGroups();
+    
     srand(time(NULL));
     struct sockaddr_in client;
     struct sockaddr_in server;
@@ -1098,6 +1133,7 @@ int main(int argc, const char * argv[])
         myGroups[i].active = 0;
         myGroups[i].size = 0;
     }
+    deserializeFileToGroups();
     
     
     pthread_mutex_init(&mutex, NULL);

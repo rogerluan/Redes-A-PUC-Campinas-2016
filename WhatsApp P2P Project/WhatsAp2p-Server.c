@@ -221,7 +221,7 @@ void sendResp(struct SocketBuffer *buff, int ns)
 }
 
 //@ns = socket descriptor
-void recvResp(struct SocketBuffer *buff, int ns)
+int recvResp(struct SocketBuffer *buff, int ns)
 {
 	char *oldbuff;
     ssize_t bytesToReceive = 0, bytesReceived, totalBytesReceived = 0, sizeToReceive = 0;
@@ -237,9 +237,10 @@ void recvResp(struct SocketBuffer *buff, int ns)
         if (bytesReceived  == -1)
         {
             perror("Recv()");
-            exit(6);
+            return -1;
         }
         totalBytesReceived += bytesReceived;
+        
     }
     
     //Aloca quantidade de espaco necessaria + margem (pra evitar call pro malloc o tempo todo)
@@ -261,10 +262,11 @@ void recvResp(struct SocketBuffer *buff, int ns)
         if (bytesReceived  == -1)
         {
             perror("Recv()");
-            exit(6);
+            return -1;
         }
         totalBytesReceived += bytesReceived;
     }
+    return 1;
 }
 
 
@@ -311,7 +313,7 @@ void *updateClient(void *myClientarg)
     clearBuffer(buffer);
     while(onlineClients[myClient].active==1)
     {
-        usleep(2000000);
+        usleep(5000000);
             printf("Updating User Base\n");
             int onlineUsers=0;
             for(i=0;i<MAX_ONLINE_USERS; i++)
@@ -366,12 +368,18 @@ void *handle_client(void *threadClientIdarg) {
     printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     
     pthread_create(&thread_id, NULL, updateClient, (void *)&threadClientId); //cria a thread
-    
+    int status;
     while (connected)
     {
         printf("Thread[%u]: Aguardando mensagem do cliente\n", (unsigned)tid);
         
-        recvResp(buffer, onlineClients[threadClientId].socket);
+        status = recvResp(buffer, onlineClients[threadClientId].socket);
+        
+        if (status==-1)
+        {
+            disconnectClient(&onlineClients[threadClientId]);
+            pthread_exit(0);
+        }
         
         messageid = readByte(buffer);
         
@@ -403,6 +411,7 @@ void *handle_client(void *threadClientIdarg) {
             {
                 printf("Thread[%u]: Cliente da porta %d esta se desconectando.\n", (unsigned)tid, ntohs(client.sin_port));
                 disconnectClient(&onlineClients[threadClientId]);
+                pthread_exit(0);
                 break;
             }
             default:
