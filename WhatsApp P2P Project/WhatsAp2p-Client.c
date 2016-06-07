@@ -176,11 +176,13 @@ char *readString(struct SocketBuffer *buff)
         buff->pos++;
         now = buff->buffer[buff->pos];
     }
+    if (now=='\0')
+        buff->pos++;//teste
     
     size = buff->pos-initialPos;
     retval = (char*)malloc(size);
     memcpy(retval, &buff->buffer[initialPos], size);
-    buff->pos++;
+    //buff->pos++;
     if (buff->pos > buff->size-1)
         buff->pos = buff->size-1;
     return retval;
@@ -220,7 +222,7 @@ void writeByte(unsigned char byte, struct SocketBuffer *buff)
 void writeString(char *string, struct SocketBuffer *buff)
 {
     int size = 0;
-    int strChar = string[0];
+    char strChar = string[0];
     while(strChar!='\0')
     {
         size++;
@@ -368,7 +370,7 @@ char myIp[16];
 socklen_t serverSocket;
 int operational;
 int usersOnline=0;
-char lastMessages[LASTMESSAGE+1][140];
+char lastMessages[LASTMESSAGE+1][500];
 int dontStartOperations;
 char myName[50], myPhone[PHONE_SIZE];
 /////////// - Other Functions
@@ -450,14 +452,19 @@ void *handle_client(void *threadClientIdarg)
                 break;
             case IMAGE_MESSAGE:
                 ;char cwd[1024];
+                char *fileName;
+                char fileNameRecv[400];
                 getcwd(cwd, sizeof(cwd));
                 sender = readString(buffer);
                 phone = readString(buffer);
                 fileSize = readInt(buffer);
                 printf("FileSize to Receive: %d\n",fileSize);
                 file = readFile(fileSize, buffer);
+                fileName = readString(buffer);
+                strcpy(fileNameRecv,"recv");
+                strcat(fileNameRecv, fileName);
                 
-                FILE *diskFile= fopen("photorecv.png", "wb");
+                FILE *diskFile= fopen(fileNameRecv, "wb");
                 if (diskFile!=NULL)
                 {
                     fwrite(file, 1,fileSize, diskFile);
@@ -475,12 +482,13 @@ void *handle_client(void *threadClientIdarg)
                 strcat(lastMessages[LASTMESSAGE], sender);
                 strcat(lastMessages[LASTMESSAGE], " / ");
                 strcat(lastMessages[LASTMESSAGE], phone);
-                strcat(lastMessages[LASTMESSAGE], "Image Received, saved in:");
+                strcat(lastMessages[LASTMESSAGE], "\nImage Received, saved in:");
                 strcat(lastMessages[LASTMESSAGE], cwd);
                 strcat(lastMessages[LASTMESSAGE], "/");
-                strcat(lastMessages[LASTMESSAGE], "photorecv.png");
+                strcat(lastMessages[LASTMESSAGE], fileNameRecv);
                 strcat(lastMessages[LASTMESSAGE], "\n");
                 
+                free(fileName);
                 free(file);
                 free(sender);
                 free(phone);
@@ -491,6 +499,7 @@ void *handle_client(void *threadClientIdarg)
                 break;
             }
         }
+    printf("Mensagem Recebida, atualize a tela\n");
     usleep(5000000);
     disconnectClient(&onlineClients[threadClientId]);
     pthread_exit(0);
@@ -554,7 +563,8 @@ void *serverReceiver(void *param)
 
 }
 
-int connectToServer(const char *hostnameParam, unsigned short port) {
+int connectToServer(const char *hostnameParam, unsigned short port)
+{
     
     struct hostent *hostname;
     struct sockaddr_in server;
@@ -573,13 +583,15 @@ int connectToServer(const char *hostnameParam, unsigned short port) {
     server.sin_addr.s_addr = *((unsigned long *)hostname->h_addr);
     
     //Creates socket
-    if ((returnSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((returnSocket = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    {
         perror("Socket()");
         exit(3);
     }
     
     //Establishes a connection with the server.
-    if (connect(returnSocket, (struct sockaddr *)&server, sizeof(server)) < 0) {
+    if (connect(returnSocket, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
         perror("Connect()");
         exit(4);
     }
@@ -590,13 +602,12 @@ int connectToServer(const char *hostnameParam, unsigned short port) {
 void *P2Sender(void * P2Messagearg)
 {
     struct P2Message *message = (struct P2Message*)P2Messagearg;
-    
     usleep(rand()%10000);
     //abre conexao tcp com message.listenport / message.listenip
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
 
     sendResp(message->buffer, newOpenedSocket);
-    usleep(30000000);
+    usleep(100000000);
     close(newOpenedSocket);
     closeBuffer(message->buffer);
     free(message);
@@ -604,6 +615,32 @@ void *P2Sender(void * P2Messagearg)
     pthread_exit(0);
 }
 
+void printContacts()
+{
+    int i=0,k=0;
+    
+    for (i=0;i<MAXGROUPS;i++)
+    {
+        if (myGroups[i].active==1)
+        {
+            if (myGroups[i].size>1)
+            {
+                printf("//================\nGrupo ID: %d\n",i);
+                for(k=0;k<myGroups[i].size;k++)
+                {
+                    printf("Nome: %s - Fone %s\n",myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
+                }
+                printf("//================\n");
+            }
+            else
+            {
+                printf("Contato ID: %d -Nome: %s - Fone %s\n",i,myGroups[i].contacts[0].name,myGroups[i].contacts[0].phone);
+            }
+        }
+    }
+
+
+}
 
 void *clientOperation(void *param)
 {
@@ -662,7 +699,6 @@ void *clientOperation(void *param)
                 
                 break;
             case OP_MAKEGROUP:
-                
                 for (i=0;i<MAXGROUPS;i++)
                 {
                     if (myGroups[i].active==1 && myGroups[i].size==1)
@@ -709,25 +745,7 @@ void *clientOperation(void *param)
                 break;
             case OP_SENDMESSAGE:
                 
-                for (i=0;i<MAXGROUPS;i++)
-                {
-                    if (myGroups[i].active==1)
-                    {
-                        if (myGroups[i].size>1)
-                        {
-                            printf("//================\nGrupo ID: %d\n",i);
-                            for(k=0;k<myGroups[i].size;k++)
-                            {
-                                printf("Nome: %s - Fone %s\n",myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
-                            }
-                            printf("//================\n");
-                        }
-                        else
-                        {
-                            printf("Contato ID: %d -Nome: %s - Fone %s\n",i,myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
-                        }
-                    }
-                }
+                printContacts();
                 printf("Escolha o ID pra quem enviar a mensagem:");
                 scanf("%d",&choiceid);
                 
@@ -784,25 +802,7 @@ void *clientOperation(void *param)
                 break;
             case OP_SENDIMAGE:
                 
-                for (i=0;i<MAXGROUPS;i++)
-                {
-                    if (myGroups[i].active==1)
-                    {
-                        if (myGroups[i].size>1)
-                        {
-                            printf("//================\nGrupo ID: %d\n",i);
-                            for(k=0;k<myGroups[i].size;k++)
-                            {
-                                printf("Nome: %s - Fone %s\n",myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
-                            }
-                            printf("//================\n");
-                        }
-                        else
-                        {
-                            printf("Contato ID: %d -Nome: %s - Fone %s\n",i,myGroups[i].contacts[k].name,myGroups[i].contacts[k].phone);
-                        }
-                    }
-                }
+                printContacts();
                 printf("Escolha o ID pra quem enviar a mensagem:");
                 scanf("%d",&choiceid);
                 
@@ -869,10 +869,12 @@ void *clientOperation(void *param)
                                 startBuffer(message->buffer);
                                 clearBuffer(message->buffer);
                                 writeByte(IMAGE_MESSAGE,message->buffer);
+                                printf("Myname: %s \n",myName);
                                 writeString(myName,message->buffer);
                                 writeString(myPhone,message->buffer);
                                 writeInt((int)sz,message->buffer);
                                 buffWrite(file,sz,message->buffer);
+                                writeString(text,message->buffer);
                                 
                                 pthread_create(&thread_id, NULL, P2Sender, (void*)message);
                                 
@@ -894,6 +896,7 @@ void *clientOperation(void *param)
                 break;
             case OP_LEAVE:
                 //Envia msg pedindo users
+                
                 clearBuffer(&myBuff);
                 writeByte(DISCONNECT_REQUEST, &myBuff);
                 sendResp(&myBuff, serverSocket);
