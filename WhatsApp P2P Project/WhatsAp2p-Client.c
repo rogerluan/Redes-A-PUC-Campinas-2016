@@ -454,13 +454,17 @@ void *handle_client(void *threadClientIdarg)
                 sender = readString(buffer);
                 phone = readString(buffer);
                 fileSize = readInt(buffer);
+                printf("FileSize to Receive: %d\n",fileSize);
                 file = readFile(fileSize, buffer);
                 
                 FILE *diskFile= fopen("photorecv.png", "wb");
                 if (diskFile!=NULL)
                 {
-                    fwrite(file, 0, fileSize, diskFile);
+                    fwrite(file, 1,fileSize, diskFile);
                     fclose(diskFile);
+                }else
+                {
+                    printf("error salvando arquivo\n");
                 }
                 
                 for(i=1;i<LASTMESSAGE+1;i++)
@@ -473,6 +477,7 @@ void *handle_client(void *threadClientIdarg)
                 strcat(lastMessages[LASTMESSAGE], phone);
                 strcat(lastMessages[LASTMESSAGE], "Image Received, saved in:");
                 strcat(lastMessages[LASTMESSAGE], cwd);
+                strcat(lastMessages[LASTMESSAGE], "/");
                 strcat(lastMessages[LASTMESSAGE], "photorecv.png");
                 strcat(lastMessages[LASTMESSAGE], "\n");
                 
@@ -591,7 +596,7 @@ void *P2Sender(void * P2Messagearg)
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
 
     sendResp(message->buffer, newOpenedSocket);
-    usleep(5000000);
+    usleep(30000000);
     close(newOpenedSocket);
     closeBuffer(message->buffer);
     free(message);
@@ -815,12 +820,9 @@ void *clientOperation(void *param)
                 }
                 char cwd[1024];
                 getcwd(cwd, sizeof(cwd));
-                printf("%s \n",cwd);
-                
                 printf("Digite o caminho do arquivo:\n");
                 fpurge(stdin);
                 gets(text);
-                
                 FILE *diskFile = fopen(text, "rb");
                 size_t sz;
                 if (diskFile!=NULL)
@@ -833,14 +835,14 @@ void *clientOperation(void *param)
                     usleep(1000000);
                     break;
                 }
-                
+                printf("File size: %zu\n",sz);
                 char *file;
                 file = (char*)malloc(sz);
                 
-                diskFile = fopen("photo.png", "rb");
+                diskFile = fopen(text, "rb");
                 if (diskFile!=NULL)
                 {
-                    fread(file, 0, sz,diskFile);
+                    fread(file, 1, sz ,diskFile);
                     fclose(diskFile);
                 }else{
                     printf("arquivo invalido \n");
@@ -884,7 +886,7 @@ void *clientOperation(void *param)
                         }
                     }
                 }
-                usleep(2000000);
+                usleep(10000000);
                 free(file);
                 break;
             case OP_UPDATESCREEN:
