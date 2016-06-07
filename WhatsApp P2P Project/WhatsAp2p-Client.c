@@ -418,7 +418,7 @@ void *handle_client(void *threadClientIdarg)
     pthread_t tid = pthread_self();
     
     clientSocket = onlineClients[threadClientId].socket;
-//    struct sockaddr_in client = onlineClients[threadClientId].client;
+    //    struct sockaddr_in client = onlineClients[threadClientId].client;
     struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
     
     int messageid;
@@ -426,14 +426,14 @@ void *handle_client(void *threadClientIdarg)
     //printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     char *sender, *phone, *msg, *file;
     int fileSize=0;
-
+    
     recvResp(buffer, onlineClients[threadClientId].socket);
     
     messageid = readByte(buffer);
     
     switch (messageid)
     {
-        case TEXT_MESSAGE:
+        case TEXT_MESSAGE: {
             
             sender = readString(buffer);
             phone = readString(buffer);
@@ -455,8 +455,9 @@ void *handle_client(void *threadClientIdarg)
             free(msg);
             //printMenu();
             break;
-        case IMAGE_MESSAGE:
-            ;char cwd[1024];
+        }
+        case IMAGE_MESSAGE: {
+            char cwd[1024];
             char *fileName;
             char fileNameRecv[400];
             getcwd(cwd, sizeof(cwd));
@@ -498,9 +499,11 @@ void *handle_client(void *threadClientIdarg)
             free(sender);
             free(phone);
             break;
-        default:
+        }
+        default: {
             printf("Thread[%u]: Comando de código %d desconhecido.\n", (unsigned)tid, messageid);
-        break;
+            break;
+        }
     }
     printf("Mensagem Recebida, atualize a tela\n");
     
@@ -576,7 +579,8 @@ bool saveBufferToFile(struct SocketBuffer *buffer)
 {
     bool operationSucceed = true, triedCreating = false;
     
-    if (!buffer || buffer == NULL) {
+    if (!buffer || buffer == NULL)
+    {
         return !operationSucceed;
     }
     
@@ -586,9 +590,11 @@ bool saveBufferToFile(struct SocketBuffer *buffer)
         //try to open the contacts book file
         contactsBook = fopen("contactsBook.amiguinhos", "r+");
         
-        if (!contactsBook) { //unsuccess case
+        if (!contactsBook)
+        { //unsuccess case
             // try to create the contacts book file
-            if (!triedCreating) {
+            if (!triedCreating)
+            {
                 triedCreating = true;
                 fclose(fopen("contactsBook.amiguinhos", "w"));
             } else {
@@ -603,7 +609,8 @@ bool saveBufferToFile(struct SocketBuffer *buffer)
     
     fwrite(buffer->buffer, 1, buffer->size, contactsBook);
     
-    if (contactsBook) {
+    if (contactsBook)
+    {
         fclose(contactsBook);
     }
     
@@ -710,7 +717,8 @@ void deserializeFileToGroups()
     clearBuffer(&buffer);
     buffer = readGroupsFromFile();
     
-    if (!buffer.size) {
+    if (!buffer.size)
+    {
         return;
     }
     
@@ -814,8 +822,8 @@ void printContacts()
             }
         }
     }
-
-
+    
+    
 }
 
 void *clientOperation(void *param)
@@ -876,13 +884,8 @@ void *clientOperation(void *param)
                 //Envia msg pedindo users
                 
                 break;
-<<<<<<< HEAD
             }
             case OP_MAKEGROUP: {
-                
-=======
-            case OP_MAKEGROUP:
->>>>>>> ee860c83db623aee16f914c18052cc40c3f4bad5
                 for (i=0;i<MAXGROUPS;i++)
                 {
                     if (myGroups[i].active==1 && myGroups[i].size==1)
@@ -1081,24 +1084,16 @@ void *clientOperation(void *param)
             case OP_UPDATESCREEN: {
                 //do nothing actually, screen will be redarawn on the top of this while
                 break;
-<<<<<<< HEAD
             }
             case OP_LEAVE: {
-=======
-            case OP_LEAVE:
->>>>>>> ee860c83db623aee16f914c18052cc40c3f4bad5
                 serializeGroupsToFile();
                 clearBuffer(&myBuff);
                 writeByte(DISCONNECT_REQUEST, &myBuff);
                 sendResp(&myBuff, serverSocket);
                 
                 break;
-<<<<<<< HEAD
             }
             default: {
-=======
-            default:
->>>>>>> ee860c83db623aee16f914c18052cc40c3f4bad5
                 printf("Erro, comando nao reconhecido");
                 break;
             }
