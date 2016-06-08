@@ -1,6 +1,6 @@
 //
-//  WhatsAp2p Server.c
-//  WhatsAp2p Server
+//  WhatsAp2p Client.c
+//  WhatsAp2p Client
 //
 //  Created by Roger Luan on 6/3/16.
 //  Copyright © 2016 Roger Oba. All rights reserved.
@@ -1274,6 +1274,4 @@ int main(int argc, const char * argv[])
             exit(7);
         }
     }
-    
-    
 }
