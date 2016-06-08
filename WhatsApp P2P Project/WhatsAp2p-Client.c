@@ -40,7 +40,8 @@
 #define MAXGROUPS 500
 
 pthread_t thread_id;
-pthread_mutex_t mutex;
+pthread_mutex_t mutexMessages;
+pthread_mutex_t mutexOnlineUsers;
 
 int port;
 char myIp[16];
@@ -450,6 +451,7 @@ void *handle_client(void *threadClientIdarg)
             phone = readString(buffer);
             msg = readString(buffer);
             //printf("%s %s %s\n",sender,phone,msg);
+            pthread_mutex_lock(&mutexMessages);
             for(i=1;i<LASTMESSAGE+1;i++)
             {
                 strcpy(lastMessages[i-1], lastMessages[i]);
@@ -461,6 +463,7 @@ void *handle_client(void *threadClientIdarg)
             strcat(lastMessages[LASTMESSAGE], ":\n");
             strcat(lastMessages[LASTMESSAGE], msg);
             strcat(lastMessages[LASTMESSAGE], "\n");
+            pthread_mutex_unlock(&mutexMessages);
             free(sender);
             free(phone);
             free(msg);
@@ -505,7 +508,7 @@ void *handle_client(void *threadClientIdarg)
             strcat(fileNameOpen,fileNameRecv);
             system(fileNameOpen);
             //===================
-            
+            pthread_mutex_lock(&mutexMessages);
             for(i=1;i<LASTMESSAGE+1;i++)
             {
                 strcpy(lastMessages[i-1], lastMessages[i]);
@@ -519,7 +522,7 @@ void *handle_client(void *threadClientIdarg)
             strcat(lastMessages[LASTMESSAGE], "/");
             strcat(lastMessages[LASTMESSAGE], fileNameRecv);
             strcat(lastMessages[LASTMESSAGE], "\n");
-            
+            pthread_mutex_unlock(&mutexMessages);
             free(fileName);
             free(file);
             free(sender);
@@ -560,6 +563,7 @@ void *serverReceiver(void *param)
                 
             case UPDATE_REQUEST:
                 //printf("Receiving Users.\n");
+                pthread_mutex_lock(&mutexOnlineUsers);
                 for (i=0;i<MAX_ONLINE_USERS;i++)
                 {
                     if (serverOnlineClients[i].readyForCommunication!=0)
@@ -579,6 +583,8 @@ void *serverReceiver(void *param)
                     serverOnlineClients[i].readyForCommunication = 1;
                     //printf("%s, %s, %s, %hu\n",serverOnlineClients[i].name,serverOnlineClients[i].phone,serverOnlineClients[i].listenIpAddress,serverOnlineClients[i].listenPort);
                 }
+                pthread_mutex_unlock(&mutexOnlineUsers);
+
                 break;
                 
             case DISCONNECT_REQUEST:
@@ -746,7 +752,7 @@ void serializeGroupsToFile()
             }
         }
     }
-    printf("Pos: %zd - size %zd =====\n",buffer.pos, buffer.size);
+   // printf("Pos: %zd - size %zd =====\n",buffer.pos, buffer.size);
     saveBufferToFile(&buffer);
     closeBuffer(&buffer);
 }
@@ -965,9 +971,10 @@ void *clientOperation(void *param)
                 printf("Digite sua mensagem:");
                 fpurge(stdin);
                 gets(text);
-                
+                pthread_mutex_lock(&mutexOnlineUsers);
                 for(k=0;k<myGroups[choiceid].size;k++)
                 {
+                    
                     for(i=0;i<MAX_ONLINE_USERS;i++)
                     {
                         if (serverOnlineClients[i].readyForCommunication==1)
@@ -1000,6 +1007,7 @@ void *clientOperation(void *param)
                         }
                     }
                 }
+                pthread_mutex_unlock(&mutexOnlineUsers);
                 usleep(2000000);
                 break;
             }
@@ -1153,7 +1161,8 @@ int main(int argc, const char * argv[])
     readGroupsFromFile();
     
     
-    pthread_mutex_init(&mutex, NULL);
+    pthread_mutex_init(&mutexMessages, NULL);
+    pthread_mutex_init(&mutexOnlineUsers, NULL);
     
     //============================================================================================
     //ESCOLHE PORTA E PEGA IP
