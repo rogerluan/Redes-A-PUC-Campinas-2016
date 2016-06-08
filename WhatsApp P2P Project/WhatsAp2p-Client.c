@@ -27,7 +27,7 @@
 
 #include <ifaddrs.h>
 
-#pragma mark - Global Variables
+////////////// - Global Variables
 
 #define PORT_SIZE 5
 #define PHONE_SIZE 11
@@ -50,7 +50,7 @@ int operational;
 int dontStartOperations;
 char myName[50], myPhone[PHONE_SIZE];
 
-#pragma mark - Enumerations
+////////////// - Enumerations
 
 enum serverMessages
 {
@@ -75,7 +75,7 @@ enum clientOperations
     OP_LEAVE
 };
 
-#pragma mark - Structures
+////////////// - Structures
 
 struct SocketBuffer
 {
@@ -120,7 +120,7 @@ struct ContactGroup myGroups[MAXGROUPS];
 struct Client onlineClients[MAX_ONLINE_USERS];
 struct Client serverOnlineClients[MAX_ONLINE_USERS];
 
-#pragma mark - Read & Write Methods
+////////////// - Read & Write Methods
 
 void *buffRead(int size, struct SocketBuffer *buff)
 {
@@ -424,12 +424,10 @@ void *handle_client(void *threadClientIdarg)
     pthread_t tid = pthread_self();
     
     clientSocket = onlineClients[threadClientId].socket;
-    //    struct sockaddr_in client = onlineClients[threadClientId].client;
     struct SocketBuffer *buffer = &(onlineClients[threadClientId].buffer);
     
     int messageid;
     int i=0;
-    //printf("Thread[%u]: Cliente se conectou com %d\n", (unsigned)tid, clientSocket);
     char *sender, *phone, *msg, *file;
     int fileSize=0;
     if (recvResp(buffer, onlineClients[threadClientId].socket)==-1)
@@ -446,11 +444,9 @@ void *handle_client(void *threadClientIdarg)
     {
         case TEXT_MESSAGE:
         {
-            //printf("TEXT MESSAGE \n");
             sender = readString(buffer);
             phone = readString(buffer);
             msg = readString(buffer);
-            //printf("%s %s %s\n",sender,phone,msg);
             pthread_mutex_lock(&mutexMessages);
             for(i=1;i<LASTMESSAGE+1;i++)
             {
@@ -467,12 +463,10 @@ void *handle_client(void *threadClientIdarg)
             free(sender);
             free(phone);
             free(msg);
-            //printMenu();
             break;
         }
         case IMAGE_MESSAGE:
         {
-            //printf("IMAGE MESSAGE \n");
             char cwd[1024];
             char *fileName;
             char fileNameRecv[400];
@@ -481,7 +475,6 @@ void *handle_client(void *threadClientIdarg)
             sender = readString(buffer);
             phone = readString(buffer);
             fileSize = readInt(buffer);
-            //printf("FileSize to Receive: %d\n",fileSize);
             file = readFile(fileSize, buffer);
             fileName = readString(buffer);
             strcpy(fileNameRecv,"recv");
@@ -557,12 +550,13 @@ void *serverReceiver(void *param)
         switch (messageid)
         {
             case CONNECTION_REQUEST:
+            {
                 printf("Sucessfuly connected to the server.\n");
                 dontStartOperations=0;
                 break;
-                
+            }
             case UPDATE_REQUEST:
-                //printf("Receiving Users.\n");
+            {
                 pthread_mutex_lock(&mutexOnlineUsers);
                 for (i=0;i<MAX_ONLINE_USERS;i++)
                 {
@@ -581,20 +575,20 @@ void *serverReceiver(void *param)
                     serverOnlineClients[i].listenIpAddress = readString(&myBuff);
                     serverOnlineClients[i].listenPort = readShort(&myBuff);
                     serverOnlineClients[i].readyForCommunication = 1;
-                    //printf("%s, %s, %s, %hu\n",serverOnlineClients[i].name,serverOnlineClients[i].phone,serverOnlineClients[i].listenIpAddress,serverOnlineClients[i].listenPort);
                 }
                 pthread_mutex_unlock(&mutexOnlineUsers);
 
                 break;
-                
+            }
             case DISCONNECT_REQUEST:
-                
+            {
                 break;
-                
+            }
             default:
+            {
                 printf("Message not recognized. \n");
                 break;
-                
+            }
         }
     }
     closeBuffer(&myBuff);
@@ -752,7 +746,6 @@ void serializeGroupsToFile()
             }
         }
     }
-   // printf("Pos: %zd - size %zd =====\n",buffer.pos, buffer.size);
     saveBufferToFile(&buffer);
     closeBuffer(&buffer);
 }
@@ -804,19 +797,13 @@ int connectToServer(const char *hostnameParam, unsigned short port)
 void *P2Sender(void * P2Messagearg)
 {
     struct P2Message *message = (struct P2Message*)P2Messagearg;
-    //printf("Sender Thread Started\n");
     usleep(rand()%1000000);
-    //abre conexao tcp com message.listenport / message.listenip
-    //printf("Opening connection\n");
     int newOpenedSocket = connectToServer(message->listenIpAddress, message->listenPort);
-    //printf("Sending\n");
     sendResp(message->buffer, newOpenedSocket);
-    //printf("Sent\n");
     usleep(100000000);
     close(newOpenedSocket);
     closeBuffer(message->buffer);
     free(message);
-    
     pthread_exit(0);
 }
 
@@ -1041,12 +1028,11 @@ void *clientOperation(void *param)
                     fseek(diskFile, 0L, SEEK_END);
                     sz = ftell(diskFile);
                     fclose(diskFile);
-                }else{
+                } else {
                     printf("arquivo invalido \n");
                     usleep(1000000);
                     break;
                 }
-                //printf("File size: %zu\n",sz);
                 char *file;
                 file = (char*)malloc(sz);
                 
@@ -1070,7 +1056,6 @@ void *clientOperation(void *param)
                         {
                             if (strcmp(myGroups[choiceid].contacts[k].phone,serverOnlineClients[i].phone)==0)
                             {
-                                //found match
                                 printf("Enviando imagem para: %s\n",myGroups[choiceid].contacts[k].name);
                                 
                                 message = (struct P2Message*)malloc(sizeof(struct P2Message));
@@ -1080,13 +1065,11 @@ void *clientOperation(void *param)
                                 startBuffer(message->buffer);
                                 clearBuffer(message->buffer);
                                 writeByte(IMAGE_MESSAGE,message->buffer);
-                                //printf("Myname: %s \n",myName);
                                 writeString(myName,message->buffer);
                                 writeString(myPhone,message->buffer);
                                 writeInt((int)sz,message->buffer);
                                 buffWrite(file,sz,message->buffer);
                                 writeString(text,message->buffer);
-                                //printf("OPE creating sender thread\n");
                                 pthread_create(&thread_id, NULL, P2Sender, (void*)message);
                                 
                                 break;
@@ -1130,7 +1113,7 @@ void *clientOperation(void *param)
     pthread_exit(0);
 }
 
-#pragma mark - Main
+////////////// - Main
 
 int main(int argc, const char * argv[])
 {
@@ -1235,7 +1218,6 @@ int main(int argc, const char * argv[])
         perror("Bind()");
         exit(3);
     }
-    // printf("Bind ok. Preparando listen\n");
     
     /*
      * Prepara o socket para aguardar por conexões e
@@ -1247,7 +1229,6 @@ int main(int argc, const char * argv[])
         perror("Listen()");
         exit(4);
     }
-    // printf("Listen ok. Chamando accept\n");
     
     /*
      * Aceita uma conexão e cria um novo socket através do qual
@@ -1260,7 +1241,6 @@ int main(int argc, const char * argv[])
     
     while (1)
     {
-        //    printf("Servidor pronto e aguardando novo cliente\n");
         for(i=0;i<MAX_ONLINE_USERS; i++)
         {
             if (onlineClients[i].active==0)
@@ -1282,15 +1262,12 @@ int main(int argc, const char * argv[])
         int *threadClientId = (int*) malloc (sizeof(int));
         (*threadClientId) = nextClientId;
         
-        //printf("\nCriando thread de atendimento para o cliente na porta %d, handler %d\n", ntohs(onlineClients[nextClientId].client.sin_port), onlineClients[nextClientId].socket);
-        
         pthread_create(&thread_id, NULL, handle_client, (void *)threadClientId); //cria a thread
         
         nextClientId = -1;
         
         if ((int *)thread_id > 0)
         {
-            //printf("Thread filha criada: %u\n", (unsigned) thread_id);
             pthread_detach(thread_id);
         } else {
             perror("Thread creation!");

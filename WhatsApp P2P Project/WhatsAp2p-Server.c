@@ -24,7 +24,6 @@
 #include <sys/wait.h> // wait
 #include <pthread.h>
 
-
 /////////// - Global Variables
 #define PORT_SIZE 5
 #define PHONE_SIZE 11
@@ -43,7 +42,6 @@ enum serverMessages
     DISCONNECT_REQUEST,
 };
 
-
 /////////// - Structures
 struct SocketBuffer
 {
@@ -54,7 +52,8 @@ struct SocketBuffer
 
 
 typedef struct Client Client;
-struct Client {
+struct Client
+{
     struct sockaddr_in client;
     int socket; //socket connected to the client
     char *listenIpAddress;
@@ -68,9 +67,7 @@ struct Client {
 
 struct Client onlineClients[MAX_ONLINE_USERS];
 
-
 /////////// - Read & Write Methods
-
 
 void *buffRead(int size, struct SocketBuffer *buff)
 {
@@ -78,7 +75,9 @@ void *buffRead(int size, struct SocketBuffer *buff)
     ptr = &buff->buffer[buff->pos];
     buff->pos+=size;
     if (buff->pos > buff->size-1)
+    {
         buff->pos = buff->size-1;
+    }
     return ptr;
 }
 
@@ -132,14 +131,17 @@ char *readString(struct SocketBuffer *buff)
         now = buff->buffer[buff->pos];
     }
     if (now=='\0')
-        buff->pos++;//teste
+    {
+        buff->pos++;
+    }
     
     size = buff->pos-initialPos;
     retval = (char*)malloc(size);
     memcpy(retval, &buff->buffer[initialPos], size);
-    //buff->pos++;
     if (buff->pos > buff->size-1)
+    {
         buff->pos = buff->size-1;
+    }
     return retval;
 }
 
@@ -269,9 +271,6 @@ int recvResp(struct SocketBuffer *buff, int ns)
     return 1;
 }
 
-
-
-
 void clearClient(Client *client)
 {
     client->socket = -1;
@@ -287,16 +286,21 @@ void clearClient(Client *client)
 
 void disconnectClient(Client *client)
 {
-//    shutdown(client->socket);
 	client->readyForCommunication = 0;
     close(client->socket);
     
     if (client->phone!=NULL)
+    {
         free(client->phone);
+    }
     if (client->name!=NULL)
+    {
         free(client->name);
+    }
     if (client->listenIpAddress!=NULL)
+    {
         free(client->listenIpAddress);
+    }
     
     client->socket = -1;
     client->listenPort = -1;
@@ -315,7 +319,7 @@ void disconnectClient(Client *client)
 
 void *updateClient(void *myClientarg)
 {
-    int myTimer=0,i=0;
+    int i=0;
     int myClient = (*(int*)myClientarg);
     struct SocketBuffer buff;
     struct SocketBuffer *buffer = &buff;
@@ -454,7 +458,8 @@ int main(int argc, const char * argv[]) {
      * O primeiro argumento (argv[1]) é a porta
      * onde o servidor aguardará por conexões
      */
-    if (argc != 2) {
+    if (argc != 2)
+    {
         fprintf(stderr, "Use: %s porta\n", argv[0]);
         exit(1);
     }
@@ -464,7 +469,8 @@ int main(int argc, const char * argv[]) {
     /*
      * Cria um socket TCP (stream) para aguardar conexões
      */
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0)
+    {
         perror("Socket()");
         exit(2);
     }
@@ -481,7 +487,8 @@ int main(int argc, const char * argv[]) {
     /*b
      * Liga o servidor à porta definida anteriormente.
      */
-    if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0)  {
+    if (bind(s, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
         perror("Bind()");
         exit(3);
     }
@@ -492,7 +499,8 @@ int main(int argc, const char * argv[]) {
      * cria uma fila de conexões pendentes.
      */
     
-    if (listen(s, 1) != 0) {
+    if (listen(s, 1) != 0)
+    {
         perror("Listen()");
         exit(4);
     }
@@ -543,7 +551,8 @@ int main(int argc, const char * argv[]) {
         
         nextClientId = -1;
         
-        if ((int *)thread_id > 0)  {
+        if ((int *)thread_id > 0)
+        {
             printf("Thread filha criada: %u\n", (unsigned) thread_id);
             pthread_detach(thread_id);
         } else {
